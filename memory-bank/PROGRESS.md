@@ -22,6 +22,7 @@
 - 上传前验证已完成：`server/server.js` 和 `server/db.js` 语法检查通过，`npm run build` 构建成功；构建提示 `MCU3D` chunk 超过 500KB，已保留在性能优化任务中。
 - 本地仓库首次提交已创建，当前等待配置 Gitee 远程仓库地址。
 - Gitee 远程仓库已配置为 `https://gitee.com/soft-hardli/my-blog.git`，`master` 分支已推送并建立跟踪关系。
+- 登录 / 注册页的密码显示切换按钮已从文字改为眼睛图标，并保留无障碍标签和悬停提示。
 
 ## 进行中
 

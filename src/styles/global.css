@@ -1144,25 +1144,28 @@ a.channel:hover {
   position: relative;
 }
 .password-field input {
-  padding-right: 56px;
+  padding-right: 50px;
 }
 .password-toggle {
   position: absolute;
   top: 50%;
-  right: 7px;
+  right: 4px;
   transform: translateY(-50%);
-  min-width: 40px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   border: none;
-  border-radius: 8px;
+  border-radius: 9px;
   background: transparent;
   color: var(--text-mute);
-  font-family: var(--mono);
-  font-size: 11px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, background 0.2s ease;
 }
 .password-toggle:hover {
   color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
 }
 .password-toggle:focus-visible {
   outline: 1px solid var(--accent);

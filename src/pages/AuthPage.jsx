@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import PageShell from '../components/PageShell';
+import { EyeIcon, EyeOffIcon } from '../components/icons';
 
 export default function AuthPage() {
   const { login, register } = useAuth();
@@ -71,8 +72,9 @@ export default function AuthPage() {
                   onClick={() => setShowPassword((v) => !v)}
                   aria-pressed={showPassword}
                   aria-label={showPassword ? '隐藏密码' : '显示密码'}
+                  title={showPassword ? '隐藏密码' : '显示密码'}
                 >
-                  {showPassword ? '隐藏' : '显示'}
+                  {showPassword ? <EyeIcon /> : <EyeOffIcon />}
                 </button>
               </div>
             </div>
@@ -93,8 +95,9 @@ export default function AuthPage() {
                     onClick={() => setShowConfirm((v) => !v)}
                     aria-pressed={showConfirm}
                     aria-label={showConfirm ? '隐藏确认密码' : '显示确认密码'}
+                    title={showConfirm ? '隐藏确认密码' : '显示确认密码'}
                   >
-                    {showConfirm ? '隐藏' : '显示'}
+                    {showConfirm ? <EyeIcon /> : <EyeOffIcon />}
                   </button>
                 </div>
               </div>
