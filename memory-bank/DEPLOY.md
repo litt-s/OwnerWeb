@@ -1,5 +1,11 @@
 # OwnerWeb 部署说明
 
+代码仓库：
+
+```text
+https://gitee.com/soft-hardli/my-blog.git
+```
+
 ## 1. 前置条件
 
 - Node.js 版本必须支持 `node:sqlite`。

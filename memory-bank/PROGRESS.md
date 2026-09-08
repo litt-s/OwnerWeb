@@ -21,6 +21,7 @@
 - 上传 Gitee 前的安全与仓库整理已完成：新增 `.gitignore`、`README.md`、`server/.env.example`，关闭 Vite 自动打开浏览器，移除默认 JWT 密钥和管理员默认弱密码。
 - 上传前验证已完成：`server/server.js` 和 `server/db.js` 语法检查通过，`npm run build` 构建成功；构建提示 `MCU3D` chunk 超过 500KB，已保留在性能优化任务中。
 - 本地仓库首次提交已创建，当前等待配置 Gitee 远程仓库地址。
+- Gitee 远程仓库已配置为 `https://gitee.com/soft-hardli/my-blog.git`，`master` 分支已推送并建立跟踪关系。
 
 ## 进行中
 
