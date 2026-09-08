@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 760" width="600" height="760">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151515"/>
+      <stop offset="1" stop-color="#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff3b30"/>
+      <stop offset="1" stop-color="#a8231d"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="760" fill="url(#bg)"/>
+  <g stroke="#ffffff" opacity="0.05">
+    <path d="M0 60h600M0 120h600M0 180h600M0 240h600M0 300h600M0 360h600M0 420h600M0 480h600M0 540h600M0 660h600M0 720h600"/>
+    <path d="M60 0v760M120 0v760M180 0v760M240 0v760M300 0v760M360 0v760M420 0v760M480 0v760M540 0v760"/>
+  </g>
+
+  <circle cx="300" cy="300" r="210" fill="none" stroke="url(#ring)" stroke-width="1.5" opacity="0.7"/>
+  <circle cx="300" cy="300" r="178" fill="#101010" stroke="#242424" stroke-width="1.5"/>
+
+  <text x="300" y="300" fill="#ffffff" font-family="JetBrains Mono, monospace" font-size="120" font-weight="600" text-anchor="middle" dominant-baseline="central">LH</text>
+  <text x="300" y="378" fill="#6a6a6a" font-family="JetBrains Mono, monospace" font-size="20" letter-spacing="6" text-anchor="middle">LI HAORAN</text>
+  <circle cx="470" cy="230" r="6" fill="#ff3b30"/>
+  <text x="470" y="216" fill="#ff3b30" font-family="JetBrains Mono, monospace" font-size="12" text-anchor="middle">ONLINE</text>
+
+  <g fill="#4a4a4a" font-family="JetBrains Mono, monospace" font-size="13" text-anchor="middle" letter-spacing="3">
+    <text x="300" y="620">EMBEDDED SOFTWARE</text>
+    <text x="300" y="648">ENGINEER · 2026</text>
+  </g>
+  <path d="M240 626h120" stroke="#2a2a2a" stroke-width="1.5"/>
+</svg>

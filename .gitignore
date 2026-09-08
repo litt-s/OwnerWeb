@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+server/node_modules/
+
+# Build output
+dist/
+
+# Local environment
+.env
+server/.env
+
+# Runtime data
+server/data/
+server/uploads/
+*.db
+*.db-shm
+*.db-wal
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db
+
+# Accidental local files
+=

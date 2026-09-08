@@ -1,0 +1,55 @@
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import Search from './Search';
+import { useAuth } from '../context/AuthContext';
+import { ArrowUpRight } from './icons';
+
+export default function Nav() {
+  const navigate = useNavigate();
+  const { user, loading, logout } = useAuth();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const goContact = () => navigate('/', { state: { scrollTo: '#contact' } });
+  const onLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  return (
+    <header className={`nav ${scrolled ? 'is-scrolled' : ''}`}>
+      <div className="nav-inner">
+        <Link to="/" className="nav-brand">
+          <span className="nav-mark">LH</span>
+          <span className="nav-brand-text">李浩然</span>
+        </Link>
+
+        <nav className="nav-links">
+          {user?.role === 'admin' && <Link to="/admin" className="nav-link">后台</Link>}
+        </nav>
+
+        <Search />
+
+        <div className="nav-actions">
+          {!loading && !user && <Link to="/auth" className="nav-cta ghost">登录 / 注册</Link>}
+          {!loading && user && (
+            <>
+              <Link to="/profile" className="nav-cta ghost">{user.nickname || '个人主页'}</Link>
+              <button className="nav-cta ghost" onClick={onLogout} type="button">退出</button>
+            </>
+          )}
+          <button className="nav-cta" onClick={goContact} type="button">
+            联系我
+            <ArrowUpRight />
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}
