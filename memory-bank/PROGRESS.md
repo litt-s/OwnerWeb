@@ -23,6 +23,7 @@
 - 本地仓库首次提交已创建，当前等待配置 Gitee 远程仓库地址。
 - Gitee 远程仓库已配置为 `https://gitee.com/soft-hardli/my-blog.git`，`master` 分支已推送并建立跟踪关系。
 - 登录 / 注册页的密码显示切换按钮已从文字改为眼睛图标，并保留无障碍标签和悬停提示。
+- 本地 API 环境已创建 `server/.env` 并配置随机 `JWT_SECRET`，后端已启动验证 `/api/comments` 返回 200。
 
 ## 进行中
 
