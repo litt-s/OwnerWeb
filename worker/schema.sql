@@ -53,9 +53,10 @@ CREATE TABLE IF NOT EXISTS projects (
   link_label TEXT,
   tech_json TEXT NOT NULL DEFAULT '[]',
   points_json TEXT NOT NULL DEFAULT '[]',
+  requires_login INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
+  );
 
 CREATE TABLE IF NOT EXISTS strengths (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,5 +73,6 @@ CREATE TABLE IF NOT EXISTS site_content (
   profile_json TEXT NOT NULL,
   hero_json TEXT NOT NULL,
   experience_json TEXT NOT NULL,
+  contact_json TEXT NOT NULL DEFAULT '{}',
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

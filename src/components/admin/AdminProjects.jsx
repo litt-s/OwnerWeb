@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useContent } from '../../context/ContentContext';
 import ProjectVideo from '../ProjectVideo';
+import { LockIcon } from '../icons';
 import {
   fetchAdminProjects,
   createProject,
@@ -28,6 +29,7 @@ function toDraft(project) {
     linkLabel: project.linkLabel || '',
     tech: (project.tech || []).join('\n'),
     points: (project.points || []).join('\n'),
+    requiresLogin: !!project.requiresLogin,
   };
 }
 
@@ -45,6 +47,7 @@ const emptyDraft = {
   linkLabel: '',
   tech: '',
   points: '',
+  requiresLogin: false,
 };
 
 export default function AdminProjects({ token }) {
@@ -100,6 +103,7 @@ export default function AdminProjects({ token }) {
       linkLabel: draft.linkLabel,
       tech: splitLines(draft.tech),
       points: splitLines(draft.points),
+      requiresLogin: !!draft.requiresLogin,
     };
 
     try {
@@ -175,7 +179,14 @@ export default function AdminProjects({ token }) {
             {projects.map((project) => (
               <div className="row" key={project.id}>
                 <span>
-                  <b>{project.name}</b>
+                  <b>
+                    {project.requiresLogin && (
+                      <span className="admin-lock" title="仅登录用户可查看">
+                        <LockIcon size={13} />
+                      </span>
+                    )}
+                    {project.name}
+                  </b>
                   <small className="muted">{project.id}</small>
                 </span>
                 <span>{project.sort_order}</span>
@@ -262,6 +273,19 @@ export default function AdminProjects({ token }) {
               <div className="editor-field">
                 <label>仓库显示文字</label>
                 <input value={draft.linkLabel} onChange={(event) => set('linkLabel', event.target.value)} />
+              </div>
+              <div className="editor-field">
+                <label className="repo-check">
+                  <input
+                    type="checkbox"
+                    checked={!!draft.requiresLogin}
+                    onChange={(event) => set('requiresLogin', event.target.checked)}
+                  />
+                  <span>仅登录用户可查看</span>
+                </label>
+                <span className="editor-note">
+                  勾选后，未登录访客在列表里只能看到锁定卡片，项目正文、视频与仓库链接不会返回。
+                </span>
               </div>
             </div>
 

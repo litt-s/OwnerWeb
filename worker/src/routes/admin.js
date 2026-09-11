@@ -74,8 +74,8 @@ r.post('/projects', async (c) => {
   const dup = await c.env.DB.prepare('SELECT id FROM projects WHERE id = ?').bind(normalized.id).first();
   if (dup) return c.json({ error: '该项目 ID 已存在' }, 409);
   await c.env.DB.prepare(
-    `INSERT INTO projects (id, sort_order, name, en, tagline, desc, long_desc, video, cover, link, link_label, tech_json, points_json)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO projects (id, sort_order, name, en, tagline, desc, long_desc, video, cover, link, link_label, tech_json, points_json, requires_login)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
     .bind(
       normalized.id,
@@ -90,7 +90,8 @@ r.post('/projects', async (c) => {
       normalized.link,
       normalized.linkLabel,
       JSON.stringify(normalized.tech),
-      JSON.stringify(normalized.points)
+      JSON.stringify(normalized.points),
+      normalized.requires_login
     )
     .run();
   const row = await c.env.DB.prepare('SELECT * FROM projects WHERE id = ?').bind(normalized.id).first();
@@ -103,7 +104,7 @@ r.put('/projects/:id', async (c) => {
   const normalized = normalizeProjectInput({ ...(await c.req.json().catch(() => ({}))), id: existing.id }, existing);
   if (normalized.error) return c.json({ error: normalized.error }, 400);
   await c.env.DB.prepare(
-    `UPDATE projects SET sort_order=?, name=?, en=?, tagline=?, desc=?, long_desc=?, video=?, cover=?, link=?, link_label=?, tech_json=?, points_json=?, updated_at=datetime('now') WHERE id=?`
+    `UPDATE projects SET sort_order=?, name=?, en=?, tagline=?, desc=?, long_desc=?, video=?, cover=?, link=?, link_label=?, tech_json=?, points_json=?, requires_login=?, updated_at=datetime('now') WHERE id=?`
   )
     .bind(
       normalized.sort_order,
@@ -118,6 +119,7 @@ r.put('/projects/:id', async (c) => {
       normalized.linkLabel,
       JSON.stringify(normalized.tech),
       JSON.stringify(normalized.points),
+      normalized.requires_login,
       existing.id
     )
     .run();
@@ -192,8 +194,13 @@ r.put('/content/site', async (c) => {
   if (!row) return c.json({ error: '站点内容不存在' }, 404);
   const normalized = normalizeSiteContentInput(await c.req.json().catch(() => ({})), siteContentDto(row));
   if (normalized.error) return c.json({ error: normalized.error }, 400);
-  await c.env.DB.prepare(`UPDATE site_content SET profile_json=?, hero_json=?, experience_json=?, updated_at=datetime('now') WHERE id=1`)
-    .bind(JSON.stringify(normalized.profile), JSON.stringify(normalized.hero), JSON.stringify(normalized.experience))
+  await c.env.DB.prepare(`UPDATE site_content SET profile_json=?, hero_json=?, experience_json=?, contact_json=?, updated_at=datetime('now') WHERE id=1`)
+    .bind(
+      JSON.stringify(normalized.profile),
+      JSON.stringify(normalized.hero),
+      JSON.stringify(normalized.experience),
+      JSON.stringify(normalized.contact)
+    )
     .run();
   const updated = await c.env.DB.prepare('SELECT * FROM site_content WHERE id = 1').first();
   return c.json({ content: siteContentDto(updated) });

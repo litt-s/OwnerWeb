@@ -69,6 +69,19 @@
 - 留言/评论展示优化：`CommentThread` 改为「顶层评论 + 其下全部回复扁平到同一缩进层级」，回复只缩进一次、更深层级不再叠加缩进，每条非顶层评论标注「回复 @谁」；留言列在桌面端居中（`.guestbook-col`，820px），分隔线改为整列宽（`.comment-thread` 底边线）；修复原先评论集中在左侧、分隔线只到页面中部的问题。后端 `root_id` 归组已联调验证。
 - 分隔线补全：回复缩进由 `margin-left` 改为 `padding-left`，使两条评论之间的虚线铺满整列；项目详情页内容统一为居中列（`.project-detail` 960px），「核心实现」与「项目留言」之间的实线铺满该列。
 - 免卡部署调整（R2 → KV + 视频外链）：Cloudflare R2 需绑卡才能开通，改用 **Cloudflare KV** 存头像/项目封面（免卡、免费，经 `/media/*` 读取）；**项目视频改为外链**（B站/YouTube/直链），新增智能播放器 `src/components/ProjectVideo.jsx`（自动识别 B站/YouTube 页面链接转 iframe、直链用 `<video>`）；后台项目表单的视频由「上传」改为「链接输入」；后端移除视频上传接口与 R2 绑定，`wrangler.toml` 生成 `[[kv_namespaces]]`（`CF_KV_ID`）；本地 `wrangler dev` 验证头像上传与 `/media` 读取通过。
+- 移动端适配与性能优化：Hero PCB 标签尺寸从 2x 缩到约 1.5x（平面 `2.9×0.70`）、板外标注外移避免与线端圆圈重叠；窄屏（aspect < 1.3）隐藏板外标注，并在 Hero 增加 `.hero-quicklinks` 按钮导航（精选项目/个人经历/个人优势/访客留言/联系我）；Aurora 限制 DPR ≤ 1.5 并在离开视口或页面后台时暂停，MCU3D 限制 DPR ≤ 1.75；手机端导航换行、搜索整行、隐藏品牌文字。
+- 细节修复：「返回首页」箭头由文字 `←` 改为 SVG 图标并加悬停滑动；账号设置页 `.info-block` 内的 `.field` 补充 16px 下边距，修复保存按钮与输入框无间隔。
+- 「联系我」渠道卡片悬停样式：边框与文字同时变红，并在文字下方滑入一条红色下划线（超链接风格）。
+- 修复 Hero PCB 上 SMD 电阻抖动：电阻端帽与本体共面导致 z-fighting，已将端帽在 y/z 方向加大 0.02 消除共面；把嵌进电解电容圆柱的一颗电阻移到 `(4.6, 1.4)`；电阻整体抬高到丝印面之上（y=0.29），避免与板面/丝印面共面。
+- 修复本地 D1 中文乱码：此前用 PowerShell `Invoke-RestMethod` 测试保存站点内容时，请求体按非 UTF-8 编码导致本地 `site_content` 中文变 mojibake；已用 Node（UTF-8）从 `resume.js` 重写回正确的 profile/hero/experience/contact（项目、优势、评论未受影响，生产 D1 未被触碰）。根因与教训已记入 `LEARNINGS.md`。
+- 仓库托管平台可自主选填（`3.27`）：后台「身份与联系」新增 Gitee / GitHub / GitCode 三个复选框，勾选后填写用户名与链接；数据存 `profile.repos`，后端 `normalizeSiteContentInput` 增加平台白名单校验，前端「联系我」渠道与「个人经历」联系方式按已选平台动态渲染并支持点击跳转，兼容旧 `github/githubUrl` 数据。
+- 「联系我」区块标题可编辑（`3.28`）：`site_content` 新增 `contact_json` 列（本地已迁移，线上待执行 `ALTER TABLE`），后台新增「联系我」编辑区块（大标题 + 小标签），前端联系区读取动态值并以 `resume.js` 默认文案兜底。
+
+- 项目「仅登录用户可查看」（`3.29`）：`projects` 增加 `requires_login` 列；后台项目管理新增勾选框并在列表显示锁标识；公开项目接口使用可选登录中间件，未登录访客对受限项目只拿到锁定卡片（`locked: true`，正文/视频/仓库链接均不返回），详情接口对受限项目返回 `401`；前端 `ContentContext` 携带登录 token 拉取并在登录态变化时重取，锁定卡片显示「需登录」徽标，详情页显示登录引导。端到端验证通过（管理员开启 → 访客锁定 → 登录后完整 → 已还原）。
+- 视频占位修复（`3.30`）：项目未填写视频链接时，详情页不再渲染视频区与「该项目还没有配置演示视频」占位块；填写链接后正常播放；对应 `.proj-video.no-video` 样式已移除。
+- 修复 Hero PCB 拖动时标注被画布裁切：绕 Y 轴旋转时两侧标注会向外摆出画布边界被裁掉，已将宽屏相机取景宽度从 27 放宽到 32（`ResponsiveCamera`），为最坏约 35° 转角留出余量。
+- 导航栏品牌区（图标 + 标题）点击返回首页：原来 `Link to="/"` 在已处于首页（已滚动）时不会回到顶部，改为携带 `state={{ scrollTo: '#top' }}`，复用 `Home` 的滚动逻辑，无论从其它页面还是首页内点击都能回到首页顶部。
+- 手机端性能优化（`3.31`）：新增 `src/hooks/useRenderActive.js`（IntersectionObserver + visibilitychange，元素离屏或页面后台时把 `frameloop` 置为 `never` 暂停渲染）；Hero PCB（`MCU3D`）与个人介绍硬币（`Portrait3D`）在移动端把 DPR 上限降到 1.5、关闭抗锯齿，硬币几何分段 96→48；导航栏毛玻璃在窄屏（≤820px）模糊从 18px 降到 10px。
 
 ## 进行中
 

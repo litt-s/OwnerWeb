@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { isMobileDevice, useRenderActive } from '../hooks/useRenderActive';
 
 function makeFaceTexture() {
   const c = document.createElement('canvas');
@@ -99,11 +100,12 @@ function Env() {
   return null;
 }
 
-function Coin({ control }) {
+function Coin({ control, mobile }) {
   const ref = useRef();
   const cur = useRef({ hoverTilt: 0, last: 0 });
+  const segments = mobile ? 48 : 96;
   const face = useMemo(() => makeFaceTexture(), []);
-  const coinGeo = useMemo(() => makeCoinGeometry(1.5, 0.1, 0.06, 96), []);
+  const coinGeo = useMemo(() => makeCoinGeometry(1.5, 0.1, 0.06, segments), [segments]);
   const HOVER_SPEED = 1.7;
 
   useFrame(({ clock }) => {
@@ -138,11 +140,11 @@ function Coin({ control }) {
         <meshStandardMaterial color="#d2d2d9" metalness={0.96} roughness={0.2} envMapIntensity={1.6} />
       </mesh>
       <mesh position={[0, 0, 0.101]}>
-        <circleGeometry args={[1.43, 96]} />
+        <circleGeometry args={[1.43, segments]} />
         <meshStandardMaterial map={face} metalness={0.7} roughness={0.34} envMapIntensity={1.1} />
       </mesh>
       <mesh position={[0, 0, -0.101]} rotation={[0, Math.PI, 0]}>
-        <circleGeometry args={[1.43, 96]} />
+        <circleGeometry args={[1.43, segments]} />
         <meshStandardMaterial map={face} metalness={0.7} roughness={0.34} envMapIntensity={1.1} />
       </mesh>
     </group>
@@ -151,6 +153,8 @@ function Coin({ control }) {
 
 export default function Portrait3D() {
   const control = useRef({ dragging: false, hovering: false, direction: 1, targetX: 0, rotY: 0, rotX: 0, lastX: 0, lastY: 0 });
+  const [wrapRef, renderActive] = useRenderActive();
+  const mobile = useMemo(() => isMobileDevice(), []);
 
   const onDown = (e) => {
     const c = control.current;
@@ -190,6 +194,7 @@ export default function Portrait3D() {
 
   return (
     <div
+      ref={wrapRef}
       className="portrait-coin3d"
       onPointerDown={onDown}
       onPointerMove={onMove}
@@ -200,15 +205,16 @@ export default function Portrait3D() {
       <Canvas
         className="portrait-canvas"
         camera={{ position: [0, 0, 4.6], fov: 40 }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+        dpr={mobile ? [1, 1.5] : [1, 2]}
+        frameloop={renderActive ? 'always' : 'never'}
+        gl={{ antialias: !mobile, alpha: true, powerPreference: 'high-performance' }}
       >
         <Env />
         <ambientLight intensity={0.45} />
         <directionalLight position={[5, 6, 8]} intensity={1.5} />
         <directionalLight position={[-6, 3, -5]} intensity={0.5} color="#ff8a86" />
         <pointLight position={[-4, 2, 4]} intensity={5} color="#ff3b30" distance={20} decay={2} />
-        <Coin control={control} />
+        <Coin control={control} mobile={mobile} />
       </Canvas>
     </div>
   );

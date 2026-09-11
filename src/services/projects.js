@@ -1,10 +1,10 @@
 import { api } from '../api';
 
-export const fetchPublicProjects = () =>
-  api('/api/projects').then((data) => data.projects || []);
+export const fetchPublicProjects = (token) =>
+  api('/api/projects', { token }).then((data) => data.projects || []);
 
-export const fetchPublicProject = (id) =>
-  api(`/api/projects/${encodeURIComponent(id)}`).then((data) => data.project);
+export const fetchPublicProject = (id, token) =>
+  api(`/api/projects/${encodeURIComponent(id)}`, { token }).then((data) => data.project);
 
 export const fetchAdminProjects = (token) =>
   api('/api/admin/projects', { token }).then((data) => data.projects || []);

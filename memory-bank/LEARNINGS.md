@@ -270,3 +270,25 @@ Worker 后端登录成功并返回 token，但所有带 token 的请求（`/api/
 以后注意：
 
 升级依赖后要复核「catch 吞异常」的鉴权路径；中间件应区分 token 无效与其它异常并记录日志，避免把内部错误伪装成登录失效。
+
+## 2026-09-12 PowerShell Invoke-RestMethod 非 UTF-8 会写坏中文数据
+
+现象：
+
+用 PowerShell `Invoke-RestMethod -Body $json -ContentType "application/json"` 调用本地 Worker 保存站点内容后，本地 D1 里的中文全部变成乱码（如「嵌入式」→「嵌��式」），个人介绍页等页面显示乱码。
+
+原因：
+
+- PowerShell 5.1 的 `Invoke-RestMethod` 默认按系统 ANSI 代码页（而非 UTF-8）编码**请求体**，中文被写成错误字节，Worker 按 UTF-8 解析后就存成了 mojibake。
+- `Invoke-RestMethod` 读取**响应**也默认按非 UTF-8 解析，终端里看到的乱码有误导性：即使数据库正确，显示也是乱码（长度会变成原字符数的 2~3 倍）。
+
+解决：
+
+- 用 Node（原生 UTF-8）直接调 API，把 `resume.js` 的正确内容写回本地 `site_content`。
+- 校验也用 Node 的 `fetch`，不要用 PowerShell 判断中文是否正确。
+
+以后注意：
+
+- 不要用 PowerShell 发送含非 ASCII 的请求体；需要时改用 Node/curl 并显式 UTF-8。
+- `wrangler d1 execute --local` 与运行中的 `wrangler dev` 可能操作**不同的本地 D1 文件**（本项目 `worker/.wrangler/state/v3/d1` 下出现多个 sqlite），直接改库后必须用 API + Node 复核是否真的生效。
+- 这类只影响本地开发库，生产 D1 未被触碰；但测试后要检查本地数据是否被写坏。

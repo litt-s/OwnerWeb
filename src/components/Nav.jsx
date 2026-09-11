@@ -25,7 +25,7 @@ export default function Nav() {
   return (
     <header className={`nav ${scrolled ? 'is-scrolled' : ''}`}>
       <div className="nav-inner">
-        <Link to="/" className="nav-brand">
+        <Link to="/" state={{ scrollTo: '#top' }} className="nav-brand">
           <span className="nav-mark"><BrandMark /></span>
           <span className="nav-brand-text">Li的个人博客</span>
         </Link>

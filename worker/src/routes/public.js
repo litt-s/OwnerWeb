@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { auth } from '../lib/auth.js';
+import { auth, maybeAuth } from '../lib/auth.js';
 import {
   publicComment,
   projectDto,
@@ -23,17 +23,22 @@ r.get('/content/site', async (c) => {
   return c.json({ content: siteContentDto(row) });
 });
 
-/* 项目 */
-r.get('/projects', async (c) => {
+/* 项目（未登录时，需登录的项目只返回锁定卡片信息） */
+r.get('/projects', maybeAuth, async (c) => {
   const origin = new URL(c.req.url).origin;
+  const user = c.get('user');
   const { results } = await c.env.DB.prepare('SELECT * FROM projects ORDER BY sort_order ASC, id ASC').all();
-  return c.json({ projects: results.map((row) => projectDto(origin, row)) });
+  return c.json({
+    projects: results.map((row) => projectDto(origin, row, { locked: !user && !!row.requires_login })),
+  });
 });
 
-r.get('/projects/:projectId', async (c) => {
+r.get('/projects/:projectId', maybeAuth, async (c) => {
   const origin = new URL(c.req.url).origin;
+  const user = c.get('user');
   const row = await c.env.DB.prepare('SELECT * FROM projects WHERE id = ?').bind(c.req.param('projectId')).first();
   if (!row) return c.json({ error: '项目不存在' }, 404);
+  if (row.requires_login && !user) return c.json({ error: '该作品需要登录后查看' }, 401);
   return c.json({ project: projectDto(origin, row) });
 });
 

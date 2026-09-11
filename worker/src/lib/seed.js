@@ -2,6 +2,7 @@ import {
   profile as seedProfile,
   hero as seedHero,
   experience as seedExperience,
+  contact as seedContact,
   projects as seedProjects,
   strengths as seedStrengths,
 } from '../../../src/data/resume.js';
@@ -17,9 +18,14 @@ export async function ensureSeed(env) {
   if (!sc) {
     const profile = { ...seedProfile, certificate: '华为 HCIP 设备高级开发工程师' };
     await env.DB.prepare(
-      'INSERT INTO site_content (id, profile_json, hero_json, experience_json) VALUES (1, ?, ?, ?)'
+      'INSERT INTO site_content (id, profile_json, hero_json, experience_json, contact_json) VALUES (1, ?, ?, ?, ?)'
     )
-      .bind(JSON.stringify(profile), JSON.stringify(seedHero), JSON.stringify(seedExperience))
+      .bind(
+        JSON.stringify(profile),
+        JSON.stringify(seedHero),
+        JSON.stringify(seedExperience),
+        JSON.stringify(seedContact)
+      )
       .run();
   }
 

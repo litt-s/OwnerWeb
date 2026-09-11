@@ -49,6 +49,7 @@ projects
 | `link_label` | TEXT | 外部链接显示文字 |
 | `tech_json` | TEXT | 技术标签数组 JSON |
 | `points_json` | TEXT | 核心实现数组 JSON |
+| `requires_login` | INTEGER | 是否仅登录用户可查看，`0`/`1`，默认 `0` |
 | `created_at` | TEXT | 创建时间 |
 | `updated_at` | TEXT | 更新时间 |
 
@@ -69,11 +70,13 @@ projects
   link,
   linkLabel,
   tech,
-  points
+  points,
+  requiresLogin,
+  locked
 }
 ```
 
-`index` 不落库，由后端根据 `sort_order` 格式化为 `01`、`02`。
+`index` 不落库，由后端根据 `sort_order` 格式化为 `01`、`02`。`requiresLogin` 表示该项目是否仅登录用户可查看；`locked` 表示当前请求者（未登录）看到的是锁定卡片。
 
 约束与校验：
 
@@ -82,6 +85,7 @@ projects
 - `sort_order` 必须是不小于 1 的整数。
 - `tech` 和 `points` 接受数组或换行分隔文本，保存前去除空白项。
 - `cover` 可为空；上传后保存存储 key（Worker 存 KV，Node 存 `/uploads/projects/...`），对外由后端转换为可访问 URL。`video` 保存外链 URL（B站/YouTube/直链），不存文件。
+- `requires_login` 为 `1` 时，未登录访客在 `GET /api/projects` 只会拿到锁定卡片信息（`locked: true`，`desc`/`longDesc`/`video`/`link`/`points` 均为空），`GET /api/projects/:id` 返回 `401`；携带有效 token 的请求返回完整内容。
 - 公开接口返回上述序列化字段，不返回时间戳。
 
 初始化与兜底：
@@ -173,13 +177,14 @@ SQLite 表名：
 site_content
 ```
 
-`site_content` 是单行配置表，`id` 固定为 `1`。三段 JSON 分别保存站点基础内容：
+`site_content` 是单行配置表，`id` 固定为 `1`。四段 JSON 分别保存站点基础内容：
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
-| `profile_json` | TEXT | 个人身份、联系信息、教育背景和专业认证 |
+| `profile_json` | TEXT | 个人身份、联系信息（含 `repos` 仓库平台）、教育背景和专业认证 |
 | `hero_json` | TEXT | 首页 Hero 文案 |
 | `experience_json` | TEXT | 经历简介和经历统计 |
+| `contact_json` | TEXT | 「联系我」区块的大标题与小标签 |
 | `updated_at` | TEXT | 更新时间 |
 
 序列化字段：
@@ -200,12 +205,14 @@ site_content
       email,
       github,
       githubUrl,
+      repos: [{ key, username, url }],
       wechat,
       focus,
       certificate,
       education: { school, major, period }
     },
     hero: { eyebrow, statement, headFirst, headSecond, sub },
+    contact: { title, eyebrow },
     experience: { intro, stats: [{ value, label, sub }] }
   }
 }
@@ -217,6 +224,9 @@ site_content
 - `email` 必须符合邮箱格式。
 - `headFirst`、`headSecond`、`sub`、`intro` 必填。
 - `stats` 最多 12 条，每条的 `value` 和 `label` 必填。
+- `repos` 为仓库托管平台列表，`key` 仅允许 `gitee` / `github` / `gitcode`，同一平台不重复；`username` 最长 80 字，`url` 最长 300 字；未勾选的平台不写入数组。
+- `github` / `githubUrl` 为旧字段保留兼容：当 `repos` 缺失时，前端与后台都会用它们自动生成 GitHub 项。
+- `contact.title` 最长 160 字，`contact.eyebrow` 最长 120 字；为空时前端使用 `resume.js` 中的默认文案兜底。
 - 公开接口返回完整展示内容，不包含密码等账号敏感字段。
 
 初始化与兜底：
@@ -407,8 +417,8 @@ project_comments
 | GET | `/api/health` | 检查 API 与 SQLite 数据库状态 | 否 |
 | GET | `/api/guestbook-comments` | 获取访客留言树列表 | 否 |
 | POST | `/api/guestbook-comments` | 提交访客留言或回复 | 是 |
-| GET | `/api/projects` | 获取项目列表 | 否 |
-| GET | `/api/projects/:projectId` | 获取项目详情 | 否 |
+| GET | `/api/projects` | 获取项目列表；可选携带 token，登录后返回受限项目完整内容 | 否（可选登录） |
+| GET | `/api/projects/:projectId` | 获取项目详情；受限项目未登录返回 401 | 否（可选登录） |
 | GET | `/api/projects/:projectId/comments` | 获取指定项目的多级评论 | 否 |
 | POST | `/api/projects/:projectId/comments` | 提交项目评论或任意层级回复 | 是 |
 | GET | `/api/admin/comments` | 获取访客留言和项目评论管理列表 | 管理员 |

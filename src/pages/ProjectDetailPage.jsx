@@ -3,6 +3,7 @@ import { useContent } from '../context/ContentContext';
 import PageShell from '../components/PageShell';
 import ProjectComments from '../components/ProjectComments';
 import ProjectVideo from '../components/ProjectVideo';
+import { LockIcon } from '../components/icons';
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
@@ -25,6 +26,29 @@ export default function ProjectDetailPage() {
     );
   }
 
+  if (project.locked) {
+    return (
+      <PageShell title={project.name}>
+        <div className="project-detail container">
+          <div className="proj-hero">
+            <h1>{project.name}</h1>
+            <div className="proj-en">{project.en}</div>
+            <div className="proj-tl">{project.tagline}</div>
+          </div>
+
+          <div className="proj-locked-panel">
+            <LockIcon size={34} />
+            <h3>该作品需要登录后查看</h3>
+            <p>登录后即可查看该项目的完整介绍、核心实现与演示视频。</p>
+            <Link className="submit" to="/auth">去登录</Link>
+          </div>
+
+          <Link to="/projects" className="back" style={{ display: 'inline-block' }}>← 返回精选项目</Link>
+        </div>
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell title={project.name}>
       <div className="project-detail container">
@@ -37,13 +61,9 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        {project.video ? (
+        {project.video && (
           <div className="proj-video">
             <ProjectVideo src={project.video} poster={project.cover} />
-          </div>
-        ) : (
-          <div className="proj-video no-video">
-            <p>该项目还没有配置演示视频</p>
           </div>
         )}
 

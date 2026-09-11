@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { contact as staticContact, repoPlatforms } from '../../data/resume';
 import { useContent } from '../../context/ContentContext';
 import {
   fetchAdminSiteContent,
@@ -6,12 +7,25 @@ import {
 } from '../../services/siteContent';
 
 function toDraft(content) {
+  const profile = { ...content.profile };
+  if (Array.isArray(profile.repos)) {
+    profile.repos = profile.repos.map((item) => ({ ...item }));
+  } else if (profile.github || profile.githubUrl) {
+    // 兼容旧数据：没有 repos 时用 github / githubUrl 生成 GitHub 项
+    profile.repos = [{ key: 'github', username: profile.github || '', url: profile.githubUrl || '' }];
+  } else {
+    profile.repos = [];
+  }
   return {
     profile: {
-      ...content.profile,
+      ...profile,
       education: { ...content.profile.education },
     },
     hero: { ...content.hero },
+    contact: {
+      title: content.contact?.title ?? staticContact.title,
+      eyebrow: content.contact?.eyebrow ?? staticContact.eyebrow,
+    },
     experience: {
       ...content.experience,
       stats: (content.experience.stats || []).map((item) => ({ ...item })),
@@ -39,6 +53,24 @@ export default function AdminSiteContent({ token }) {
     setDraft((prev) => ({ ...prev, profile: { ...prev.profile, [key]: value } }));
   };
 
+  const toggleRepo = (key, checked) => {
+    setDraft((prev) => {
+      const current = prev.profile.repos || [];
+      const repos = checked
+        ? [...current, { key, username: '', url: '' }]
+        : current.filter((item) => item.key !== key);
+      return { ...prev, profile: { ...prev.profile, repos } };
+    });
+  };
+
+  const setRepoField = (key, field, value) => {
+    setDraft((prev) => {
+      const current = prev.profile.repos || [];
+      const repos = current.map((item) => (item.key === key ? { ...item, [field]: value } : item));
+      return { ...prev, profile: { ...prev.profile, repos } };
+    });
+  };
+
   const setEducation = (key, value) => {
     setDraft((prev) => ({
       ...prev,
@@ -51,6 +83,10 @@ export default function AdminSiteContent({ token }) {
 
   const setHero = (key, value) => {
     setDraft((prev) => ({ ...prev, hero: { ...prev.hero, [key]: value } }));
+  };
+
+  const setContact = (key, value) => {
+    setDraft((prev) => ({ ...prev, contact: { ...prev.contact, [key]: value } }));
   };
 
   const setIntro = (value) => {
@@ -171,13 +207,39 @@ export default function AdminSiteContent({ token }) {
               <label>微信号</label>
               <input value={draft.profile.wechat} onChange={(event) => setProfile('wechat', event.target.value)} />
             </div>
-            <div className="editor-field">
-              <label>GitHub 用户名</label>
-              <input value={draft.profile.github} onChange={(event) => setProfile('github', event.target.value)} />
-            </div>
-            <div className="editor-field">
-              <label>GitHub 地址</label>
-              <input value={draft.profile.githubUrl} onChange={(event) => setProfile('githubUrl', event.target.value)} />
+            <div className="editor-field editor-field-wide">
+              <label>仓库托管平台</label>
+              <div className="repo-picker">
+                {repoPlatforms.map((platform) => {
+                  const repo = (draft.profile.repos || []).find((item) => item.key === platform.key);
+                  return (
+                    <div className="repo-item" key={platform.key}>
+                      <label className="repo-check">
+                        <input
+                          type="checkbox"
+                          checked={!!repo}
+                          onChange={(event) => toggleRepo(platform.key, event.target.checked)}
+                        />
+                        <span>{platform.label}</span>
+                      </label>
+                      {repo && (
+                        <div className="repo-inputs">
+                          <input
+                            value={repo.username}
+                            placeholder="用户名"
+                            onChange={(event) => setRepoField(platform.key, 'username', event.target.value)}
+                          />
+                          <input
+                            value={repo.url}
+                            placeholder="链接，如 https://gitee.com/用户名"
+                            onChange={(event) => setRepoField(platform.key, 'url', event.target.value)}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             <div className="editor-field">
               <label>技术方向</label>
@@ -240,6 +302,25 @@ export default function AdminSiteContent({ token }) {
               ))}
             </div>
             <button type="button" className="act" onClick={addStat}>新增统计</button>
+          </div>
+        </div>
+
+        <div className="editor-block">
+          <h4>联系我</h4>
+          <div className="editor-field">
+            <label>大标题（可直接回车换行）</label>
+            <textarea
+              rows={3}
+              value={draft.contact.title}
+              onChange={(event) => setContact('title', event.target.value)}
+            />
+          </div>
+          <div className="editor-field">
+            <label>小标签</label>
+            <input
+              value={draft.contact.eyebrow}
+              onChange={(event) => setContact('eyebrow', event.target.value)}
+            />
           </div>
         </div>
       </div>

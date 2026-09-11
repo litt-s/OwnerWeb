@@ -2,16 +2,25 @@ import Reveal from './Reveal';
 import ThinkingDots from './ThinkingDots';
 import ScrambleText from './ScrambleText';
 import { ArrowUpRight } from './icons';
+import { repoPlatforms } from '../data/resume';
 import { useContent } from '../context/ContentContext';
 
 export default function Contact() {
   const { siteContent } = useContent();
-  const { profile } = siteContent;
+  const { profile, contact } = siteContent;
+  const repoChannels = (profile.repos || []).map((repo) => {
+    const platform = repoPlatforms.find((item) => item.key === repo.key);
+    return {
+      label: platform?.label || repo.key,
+      value: repo.username ? `@${repo.username}` : repo.url,
+      href: repo.url || null,
+    };
+  });
   const channels = [
     { label: '邮箱', value: profile.email, href: `mailto:${profile.email}` },
     { label: '电话', value: profile.phone, href: `tel:${profile.phoneRaw}` },
     { label: '微信', value: profile.wechat, href: null },
-    { label: 'GitHub', value: `@${profile.github}`, href: profile.githubUrl },
+    ...repoChannels,
   ];
   return (
     <section id="contact" className="contact">
@@ -21,13 +30,13 @@ export default function Contact() {
           <div className="contact-eyebrow">
             <span className="head-index">04</span>
             <span className="head-rule" />
-            <span>Contact · 联系我</span>
+            <span>{contact?.eyebrow || 'Contact · 联系我'}</span>
           </div>
         </Reveal>
 
         <Reveal delay={90}>
           <h2 className="contact-title">
-            <ScrambleText text={'有项目\n想一起落地？'} />
+            <ScrambleText text={contact?.title || '有项目\n想一起落地？'} />
           </h2>
         </Reveal>
 

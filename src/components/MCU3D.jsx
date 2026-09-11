@@ -2,6 +2,7 @@ import { useEffect, useRef, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useNavigate } from 'react-router-dom';
+import { isMobileDevice, useRenderActive } from '../hooks/useRenderActive';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -211,7 +212,8 @@ function ResponsiveCamera() {
   useEffect(() => {
     const aspect = size.width / Math.max(1, size.height);
     const fov = (camera.fov * Math.PI) / 180;
-    const targetWidth = aspect < 1.3 ? 15 : 27;
+    // 取景宽度要留出余量：拖动旋转时两侧标注会向外摆，太窄会被画布边缘裁掉
+    const targetWidth = aspect < 1.3 ? 15 : 32;
     const z = targetWidth / (2 * Math.tan(fov / 2) * aspect);
     camera.position.z = Math.max(16, Math.min(46, z));
     camera.position.y = camera.position.z * 0.08;
@@ -303,11 +305,12 @@ function McuModel({ dragRef, onHover, goTo }) {
 
   const smd = useMemo(
     () => [
-      { pos: [-1.5, 0.28, 2.0], size: [0.34, 0.18, 0.5] },
-      { pos: [-0.9, 0.28, 2.0], size: [0.34, 0.18, 0.5] },
-      { pos: [0.4, 0.28, 1.8], size: [0.5, 0.22, 0.34] },
-      { pos: [4.6, 0.28, 0.6], size: [0.3, 0.16, 0.44] },
-      { pos: [1.6, 0.28, 2.0], size: [0.34, 0.18, 0.5] },
+      { pos: [-1.5, 0.29, 2.0], size: [0.34, 0.18, 0.5] },
+      { pos: [-0.9, 0.29, 2.0], size: [0.34, 0.18, 0.5] },
+      { pos: [0.4, 0.29, 1.8], size: [0.5, 0.22, 0.34] },
+      // 远离电解电容 (4.7, 0.4)，避免嵌进电容圆柱
+      { pos: [4.6, 0.29, 1.4], size: [0.3, 0.16, 0.44] },
+      { pos: [1.6, 0.29, 2.0], size: [0.34, 0.18, 0.5] },
     ],
     []
   );
@@ -558,11 +561,11 @@ function McuModel({ dragRef, onHover, goTo }) {
                 <meshStandardMaterial color="#222222" metalness={0.4} roughness={0.55} />
               </mesh>
               <mesh position={[s.size[0] / 2 + 0.05, 0, 0]}>
-                <boxGeometry args={[0.14, s.size[1], s.size[2]]} />
+                <boxGeometry args={[0.14, s.size[1] + 0.02, s.size[2] + 0.02]} />
                 <meshStandardMaterial color="#cfcfcf" metalness={0.9} roughness={0.3} />
               </mesh>
               <mesh position={[-s.size[0] / 2 - 0.05, 0, 0]}>
-                <boxGeometry args={[0.14, s.size[1], s.size[2]]} />
+                <boxGeometry args={[0.14, s.size[1] + 0.02, s.size[2] + 0.02]} />
                 <meshStandardMaterial color="#cfcfcf" metalness={0.9} roughness={0.3} />
               </mesh>
             </group>
@@ -635,6 +638,8 @@ export default function MCU3D() {
   const navigate = useNavigate();
   const dragRef = useRef({ rotY: 0, rotX: 0, dragging: false, lastX: 0, lastY: 0 });
   const [hover, setHover] = useState(null);
+  const [wrapRef, renderActive] = useRenderActive();
+  const mobile = useMemo(() => isMobileDevice(), []);
 
   const goTo = (h) => {
     if (h.to === '/' && h.anchor) navigate('/', { state: { scrollTo: h.anchor } });
@@ -660,6 +665,7 @@ export default function MCU3D() {
 
   return (
     <div
+      ref={wrapRef}
       className="mcu-wrap"
       style={{ cursor: hover ? 'pointer' : 'grab' }}
       onPointerDown={onDown}
@@ -670,8 +676,9 @@ export default function MCU3D() {
       <Canvas
         className="mcu-canvas"
         camera={{ position: [0, 1.5, 19.5], fov: 40 }}
-        dpr={[1, 1.75]}
-        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+        dpr={mobile ? [1, 1.5] : [1, 1.75]}
+        frameloop={renderActive ? 'always' : 'never'}
+        gl={{ antialias: !mobile, alpha: true, powerPreference: 'high-performance' }}
       >
         <ResponsiveCamera />
         <ambientLight intensity={0.75} />

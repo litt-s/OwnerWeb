@@ -40,6 +40,13 @@ npm run config
 npx wrangler d1 execute ownerweb --remote --file=./schema.sql
 ```
 
+> 注意：`schema.sql` 用的是 `CREATE TABLE IF NOT EXISTS`，**对已存在的表不会补列**。如果线上库是更早版本，需要手动执行增量迁移：
+> ```bash
+> # 「联系我」标题可编辑（3.28）
+> npx wrangler d1 execute ownerweb --remote --command "ALTER TABLE site_content ADD COLUMN contact_json TEXT NOT NULL DEFAULT '{}'"
+> ```
+> 本地库同理（加 `--local`），或直接删除 `worker/.wrangler` 后重跑 `schema.sql`。
+
 ### 4. 配置密钥（不要写进代码/仓库）
 在 `.env.local` 填好 `JWT_SECRET` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `CORS_ORIGIN`，运行 `npm run config` 生成 `worker/.secrets.json`，再上传：
 ```bash

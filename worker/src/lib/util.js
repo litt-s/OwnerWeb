@@ -62,21 +62,30 @@ export const publicComment = (origin, c) => ({
   created_at: c.created_at,
 });
 
-export function projectDto(origin, row) {
-  return {
+export function projectDto(origin, row, { locked = false } = {}) {
+  const base = {
     id: row.id,
     sort_order: row.sort_order,
     index: String(row.sort_order).padStart(2, '0'),
     name: row.name,
     en: row.en,
     tagline: row.tagline,
+    cover: mediaUrl(origin, row.cover),
+    tech: JSON.parse(row.tech_json || '[]'),
+    requiresLogin: !!row.requires_login,
+    locked,
+  };
+  // 锁定：只返回卡片信息，不泄露正文、视频与仓库链接
+  if (locked) {
+    return { ...base, desc: '', longDesc: '', video: null, link: '', linkLabel: '', points: [] };
+  }
+  return {
+    ...base,
     desc: row.desc,
     longDesc: row.long_desc,
     video: mediaUrl(origin, row.video),
-    cover: mediaUrl(origin, row.cover),
     link: row.link,
     linkLabel: row.link_label,
-    tech: JSON.parse(row.tech_json || '[]'),
     points: JSON.parse(row.points_json || '[]'),
   };
 }
@@ -104,6 +113,7 @@ export const siteContentDto = (row) => ({
   profile: parseStoredObject(row.profile_json),
   hero: parseStoredObject(row.hero_json),
   experience: parseStoredObject(row.experience_json),
+  contact: parseStoredObject(row.contact_json),
 });
 
 export const textOrEmpty = (v) => (typeof v === 'string' ? v.trim() : '');
@@ -148,6 +158,7 @@ export function normalizeProjectInput(body, existing = {}) {
     linkLabel: textOrEmpty(body.linkLabel ?? body.link_label ?? existing.link_label),
     tech: parseListValue(body.tech ?? (existing.tech_json ? JSON.parse(existing.tech_json) : [])),
     points: parseListValue(body.points ?? (existing.points_json ? JSON.parse(existing.points_json) : [])),
+    requires_login: (body.requiresLogin ?? body.requires_login ?? existing.requires_login) ? 1 : 0,
   };
 }
 
@@ -169,13 +180,34 @@ export function textWithLimit(value, fallback, label, limit) {
   return text;
 }
 
+const REPO_KEYS = ['gitee', 'github', 'gitcode'];
+
+export function normalizeRepos(value) {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set();
+  return value
+    .map((item) => {
+      const key = textOrEmpty(item?.key);
+      if (!REPO_KEYS.includes(key) || seen.has(key)) return null;
+      seen.add(key);
+      return {
+        key,
+        username: textOrEmpty(item?.username).slice(0, 80),
+        url: textOrEmpty(item?.url).slice(0, 300),
+      };
+    })
+    .filter(Boolean);
+}
+
 export function normalizeSiteContentInput(body, current) {
   const p = body.profile ?? {};
   const h = body.hero ?? {};
   const e = body.experience ?? {};
+  const ct = body.contact ?? {};
   const cp = current.profile ?? {};
   const ch = current.hero ?? {};
   const ce = current.experience ?? {};
+  const cct = current.contact ?? {};
   try {
     const profile = {
       name: textWithLimit(p.name ?? cp.name, '', '姓名', 80),
@@ -190,6 +222,7 @@ export function normalizeSiteContentInput(body, current) {
       email: textWithLimit(p.email ?? cp.email, '', '邮箱', 160),
       github: textWithLimit(p.github ?? cp.github, '', 'GitHub 用户名', 80),
       githubUrl: textWithLimit(p.githubUrl ?? cp.githubUrl, '', 'GitHub 地址', 300),
+      repos: normalizeRepos(p.repos ?? cp.repos),
       wechat: textWithLimit(p.wechat ?? cp.wechat, '', '微信号', 80),
       focus: textWithLimit(p.focus ?? cp.focus, '', '技术方向', 160),
       certificate: textWithLimit(p.certificate ?? cp.certificate, '', '专业认证', 200),
@@ -222,7 +255,11 @@ export function normalizeSiteContentInput(body, current) {
       sub: textWithLimit(item?.sub, '', '统计说明', 120),
     }));
     if (stats.some((item) => !item.value || !item.label)) throw new Error('经历统计的数值和标题必填');
-    return { profile, hero, experience: { intro, stats } };
+    const contact = {
+      title: textWithLimit(ct.title ?? cct.title, '', '联系区标题', 160),
+      eyebrow: textWithLimit(ct.eyebrow ?? cct.eyebrow, '', '联系区标签', 120),
+    };
+    return { profile, hero, experience: { intro, stats }, contact };
   } catch (error) {
     return { error: error.message };
   }

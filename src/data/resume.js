@@ -11,6 +11,7 @@ export const profile = {
   email: '13284929767@163.com',
   github: 'litt-s',
   githubUrl: 'https://github.com/litt-s',
+  repos: [{ key: 'github', username: 'litt-s', url: 'https://github.com/litt-s' }],
   wechat: 'LHRHMW20',
   education: {
     school: '黑龙江东方学院',
@@ -20,12 +21,23 @@ export const profile = {
   focus: 'STM32 · OpenHarmony · 物联网',
 };
 
+export const repoPlatforms = [
+  { key: 'gitee', label: 'Gitee' },
+  { key: 'github', label: 'GitHub' },
+  { key: 'gitcode', label: 'GitCode' },
+];
+
 export const hero = {
   eyebrow: '嵌入式软件开发工程师 · 哈尔滨',
   statement: '用逻辑，点亮硬件',
   headFirst: '用逻辑',
   headSecond: '点亮硬件',
   sub: '专注 STM32 / OpenHarmony / 物联网系统与协议栈开发，把每一块芯片变成真正会思考的终端。',
+};
+
+export const contact = {
+  title: '有项目\n想一起落地？',
+  eyebrow: 'Contact · 联系我',
 };
 
 export const experience = {

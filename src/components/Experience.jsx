@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect, useRef } from 'react';
 import Reveal from './Reveal';
 import SectionHeading from './SectionHeading';
-import { PhoneIcon, MailIcon, GitHubIcon, WeChatIcon, PinIcon } from './icons';
+import { PhoneIcon, MailIcon, GitHubIcon, RepoIcon, WeChatIcon, PinIcon } from './icons';
+import { repoPlatforms } from '../data/resume';
 import { useContent } from '../context/ContentContext';
 
 const Portrait3D = lazy(() => import('./Portrait3D'));
@@ -30,11 +31,20 @@ export default function Experience() {
       el.removeEventListener('mouseleave', onLeave);
     };
   }, []);
+  const repoContacts = (profile.repos || []).map((repo) => {
+    const platform = repoPlatforms.find((item) => item.key === repo.key);
+    return {
+      icon: repo.key === 'github' ? GitHubIcon : RepoIcon,
+      label: platform?.label || repo.key,
+      value: repo.username ? `@${repo.username}` : repo.url,
+      href: repo.url || null,
+    };
+  });
   const contacts = [
     { icon: PhoneIcon, label: '电话', value: profile.phone, href: `tel:${profile.phoneRaw}` },
     { icon: MailIcon, label: '邮箱', value: profile.email, href: `mailto:${profile.email}` },
     { icon: WeChatIcon, label: '微信', value: profile.wechat, href: null },
-    { icon: GitHubIcon, label: 'GitHub', value: `@${profile.github}`, href: profile.githubUrl },
+    ...repoContacts,
     { icon: PinIcon, label: '所在地', value: profile.location, href: null },
   ];
   return (
