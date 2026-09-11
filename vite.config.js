@@ -14,6 +14,7 @@ export default defineConfig({
     open: true,
     proxy: {
       '/api': `http://localhost:${proxyPort}`,
+      '/media': `http://localhost:${proxyPort}`,
     },
   },
 });

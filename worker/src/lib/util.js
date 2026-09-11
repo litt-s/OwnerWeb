@@ -32,10 +32,12 @@ export function contentTypeFromKey(key) {
   return MIME_BY_EXT[ext] || 'application/octet-stream';
 }
 
+// 返回相对路径 /media/<key>，由前端同源（Pages Function / Vite 代理）转发到 Worker，
+// 避免浏览器直连 workers.dev（国内常被墙）
 export function mediaUrl(origin, key) {
   if (!key) return null;
   if (/^https?:\/\//i.test(key) || key.startsWith('/')) return key;
-  return `${origin}/media/${key}`;
+  return `/media/${key}`;
 }
 
 export function publicUser(origin, u) {
