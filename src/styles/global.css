@@ -1522,7 +1522,7 @@ a.channel:hover {
   gap: 14px;
 }
 .guestbook-col {
-  max-width: 820px;
+  max-width: 1200px;
   margin-inline: auto;
 }
 .comments {
@@ -1916,7 +1916,7 @@ a.channel:hover {
   color: var(--accent);
 }
 .project-detail {
-  max-width: 960px;
+  max-width: 1320px;
   margin-inline: auto;
   padding-bottom: 60px;
 }
