@@ -1818,10 +1818,16 @@ a.channel:hover {
 }
 .editor-video-preview {
   width: 100%;
-  max-height: 300px;
   margin-top: 12px;
+  border: 0;
   border-radius: 12px;
   background: #0c0c0e;
+}
+video.editor-video-preview {
+  max-height: 300px;
+}
+iframe.editor-video-preview {
+  aspect-ratio: 16 / 9;
 }
 .editor-cover-preview {
   max-width: 320px;
@@ -1952,7 +1958,8 @@ a.channel:hover {
 .proj-video {
   margin: 30px 0;
 }
-.proj-video video {
+.proj-video video,
+.proj-video iframe {
   width: 100%;
   aspect-ratio: 16 / 9;
   border: 1px solid var(--line-strong);

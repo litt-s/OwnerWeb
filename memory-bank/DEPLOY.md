@@ -7,7 +7,7 @@ GitHub：https://github.com/litt-s/OwnerWeb.git   （origin）
 Gitee ：https://gitee.com/soft-hardli/my-blog.git （gitee，保留）
 ```
 
-部署形态：**GitHub + Cloudflare**（前端 Pages，后端 Workers，数据 D1 + R2），全免费。
+部署形态：**GitHub + Cloudflare**（前端 Pages，后端 Workers，数据 D1 + KV），全免费。
 
 ## 1. 前置条件
 
@@ -26,14 +26,14 @@ npm install
 npx wrangler login
 ```
 
-## 2. 部署后端（Workers + D1 + R2）
+## 2. 部署后端（Workers + D1 + KV）
 
 ```bash
 cd worker
 
-# 创建 D1 与 R2
+# 创建 D1 与 KV
 npx wrangler d1 create ownerweb            # 复制返回的 database_id
-npx wrangler r2 bucket create ownerweb-media
+npx wrangler kv namespace create MEDIA
 # 把 database_id 填进 worker/wrangler.toml 的 [[d1_databases]]
 
 # 初始化数据库表
@@ -51,7 +51,7 @@ npx wrangler deploy
 所有需要填写的 ID / 密码 / 邮箱 / 域名集中在根目录 **`.env.local`**（已被 `.gitignore` 忽略）：
 
 ```text
-CF_WORKER_NAME / CF_D1_NAME / CF_D1_ID / CF_R2_BUCKET
+CF_WORKER_NAME / CF_D1_NAME / CF_D1_ID / CF_KV_ID
 ADMIN_EMAIL / ADMIN_PASSWORD / JWT_SECRET
 CORS_ORIGIN / VITE_API_BASE
 ```
@@ -59,7 +59,7 @@ CORS_ORIGIN / VITE_API_BASE
 `npm run config`（脚本 `scripts/gen-config.mjs`）据 `.env.local` 生成：
 
 ```text
-worker/wrangler.toml    D1/R2 绑定（database_id、bucket_name）
+worker/wrangler.toml    D1/KV 绑定（database_id、bucket_name）
 worker/.dev.vars        本地 wrangler dev 的密钥
 worker/.secrets.json    线上 secrets（wrangler secret bulk 用）
 ```
@@ -90,7 +90,7 @@ Build output directory：dist
 - 前端不设 `VITE_API_BASE`（走同源 `/api`）
 - Pages 环境变量加 `API_ORIGIN = https://ownerweb-api.<子域>.workers.dev`
 
-头像/视频由 Worker `/media/*` 提供，返回绝对地址，`<img>/<video>` 跨域加载无需 CORS。
+头像/封面由 Worker `/media/*` 提供，返回绝对地址；项目视频为外链。
 
 ## 5. 本地开发（一键切换后端）
 
@@ -121,10 +121,10 @@ npx wrangler d1 execute ownerweb --local --file=./schema.sql
 - 密码修改成功后旧密码不能登录。
 - 访客留言与项目评论（含任意层级回复）能提交并展示。
 - 管理员能删除留言/评论、管理用户、管理项目/优势/站点内容、上传项目封面/视频。
-- 项目详情页能播放演示视频（R2 出网免费）。
+- 项目详情页能播放演示视频（外链 B站/YouTube/直链）。
 - 刷新 `/projects`、`/admin` 不 404。
 - `GET /api/health` 返回 200。
-- 重新部署 Worker 后，D1 数据与 R2 文件仍在。
+- 重新部署 Worker 后，D1 数据与 KV 文件仍在。
 
 ## 7. 常见问题
 
@@ -134,6 +134,6 @@ npx wrangler d1 execute ownerweb --local --file=./schema.sql
 | 刷新 `/admin` 404 | `public/_redirects` 未生效（确认构建输出 `dist/_redirects`） |
 | `no such table` | 未执行 `wrangler d1 execute ... --file=./schema.sql` |
 | 管理员登录不了 | 未设 `ADMIN_EMAIL` / `ADMIN_PASSWORD` secret |
-| 上传报错 | 未创建 R2 桶，或 `wrangler.toml` 未绑定 `r2_buckets` |
+| 上传报错 | 未创建 KV 命名空间，或 `wrangler.toml` 未绑定 `kv_namespaces` |
 | Worker CPU 超限 | 免费版 CPU 10ms；PBKDF2 迭代数见 `worker/src/password.js`，可调低 |
-| 图片不显示 | `/media/*` 路由或 R2 绑定问题 |
+| 图片不显示 | `/media/*` 路由或 KV 绑定问题 |

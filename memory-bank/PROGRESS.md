@@ -56,22 +56,23 @@
 - 硬币位置与交互升级完成：硬币下移至 `top: 48%` 并以 `translateZ(-120px)` 深入腔体（与四壁共享 `.portrait-media` 的 460px 透视，视觉中心约落在 46%），宽度调整为 78% 以补偿透视缩放；悬停区域扩大到整块头像卡，`CoinBadge` 新增 `regionRef`，按鼠标位于硬币中心左/右决定旋转方向（左区向右转、右区向左转）；新增指针拖动旋转（0.6 度/像素，指针捕获、4px 阈值区分拖动与点击），松手后缓动回正且不误触发点击快转；`npm run build` 验证通过。
 - 硬币深度感与表面 3D 化完成：硬币增加 7° 俯仰角（`rotateX(7deg)`），表面新增左上高光、右下暗部、116° 斜向反光带与内圈倒角阴影（`.coin-face::after`），不再呈现为与屏幕平行的贴片；原贴身投影移除，改为落在腔体地板的压缩投影（`.space-floor-shadow`，位于 `rotateX(-90deg)` 的地板平面内、深度 118px）；四壁渐变提亮到 0.10~0.11、淡出延至 72%，腔体轮廓更明确；鼠标移动时四壁与硬币按远近产生视差（场景 -8px、硬币 -3.5px，CSS 变量 + transform 过渡驱动）；正面 ONLINE 状态点与标签改为沿硬币内圈公转（16s/圈，标签反向旋转保持水平，reduced-motion 下停止）；`npm run build` 验证通过。
 - 个人介绍页硬币替换为 three.js 真实金属硬币：新增 `src/components/Portrait3D.jsx`（@react-three/fiber），用程序化环境贴图产生真实镜面反射、LatheGeometry 圆角倒角，交互为「悬停上半上仰/下半下俯、悬停左右持续旋转、鼠标拖拽跟随旋转、移出回正」，反光质感对齐 Hero PCB 的 PBR 材质；`CoinBadge` 的 CSS 假高光方案弃用；`npm run build` 与 `wrangler` 无关，前端构建通过。
-- 部署方案确定为 **GitHub + Cloudflare**：前端 Cloudflare Pages，后端 Cloudflare Workers + Hono + D1 + R2（全免费，R2 免出网流量费）。
-- 后端从 Node/Express/SQLite 重写为 **Cloudflare Workers + Hono + D1 + R2**，接口与前端一一对齐（30+ 接口）：新增 `worker/schema.sql`、`worker/wrangler.toml`、`worker/src/index.js`、`worker/src/password.js`（PBKDF2，规避 Workers 免费版 10ms CPU 限制）；`wrangler deploy --dry-run` 打包成功。
+- 部署方案确定为 **GitHub + Cloudflare**：前端 Cloudflare Pages，后端 Cloudflare Workers + Hono + D1 + KV（全免费，KV 免费）。
+- 后端从 Node/Express/SQLite 重写为 **Cloudflare Workers + Hono + D1 + KV**，接口与前端一一对齐（30+ 接口）：新增 `worker/schema.sql`、`worker/wrangler.toml`、`worker/src/index.js`、`worker/src/password.js`（PBKDF2，规避 Workers 免费版 10ms CPU 限制）；`wrangler deploy --dry-run` 打包成功。
 - 后端模块化：`worker/src/index.js` 拆为 `src/lib/`（util、seed、auth）与 `src/routes/`（auth、profile、public、admin、media），入口统一挂载。
 - 一键切换后端：新增 `scripts/backend.mjs`（检测 `server/` 用 Node、否则用 Worker，可用 `BACKEND` 强制）与 `scripts/dev.mjs`（同时启动后端与前端）；`vite.config.js` 自动读取检测结果设置 `/api` 代理端口；`package.json` 新增 `start`、`backend` 脚本。
 - Node 后端归档：`server/` 完整复制到桌面 `OwnerWeb-backend-node/`（含 README，保留可回放），并从项目移除；同时移除失效的 CloudBase 容器文件 `Dockerfile`、`.dockerignore`。
 - 敏感信息清理与 GitHub 推送：确认无硬编码密钥、历史未提交过 `.env`；完善 `.gitignore`（忽略 `.env`、`worker/.dev.vars`、`worker/.wrangler`、`worker/node_modules` 等）；`worker/wrangler.toml` 移除管理员邮箱，改由 secret 注入；`origin` 指向 GitHub（Gitee 保留为 `gitee`），`master` 已推送。
 - README 已重写并推送：技术栈、项目结构、本地一键开发、环境变量与密钥、GitHub + Cloudflare 部署、文档索引。
-- Cloudflare Worker 本地联调跑通：`wrangler dev`（本地模拟 D1/R2）+ `wrangler d1 execute --local --file=schema.sql` 初始化；验证通过 `/api/health`、`/api/content/site`、`/api/projects`（2 个）、`/api/strengths`（6 条）、邮箱注册、管理员登录、访客留言写入、管理员删除留言、用户列表；前端 `http://localhost:5173` 经 Vite 代理 `/api` 到 Worker 返回正常。
+- Cloudflare Worker 本地联调跑通：`wrangler dev`（本地模拟 D1/KV）+ `wrangler d1 execute --local --file=schema.sql` 初始化；验证通过 `/api/health`、`/api/content/site`、`/api/projects`（2 个）、`/api/strengths`（6 条）、邮箱注册、管理员登录、访客留言写入、管理员删除留言、用户列表；前端 `http://localhost:5173` 经 Vite 代理 `/api` 到 Worker 返回正常。
 - 修复 Hono v4 鉴权缺陷：`jwtVerify` 需显式传 `'HS256'`，否则所有带 token 请求统一 401（详见 `LEARNINGS.md`）。
 - 隐私与配置集中化：新增 `.env.local`（gitignore）与模板 `.env.local.example`；`scripts/gen-config.mjs`（`npm run config`）据 `.env.local` 生成 `worker/wrangler.toml`、`worker/.dev.vars`、`worker/.secrets.json`；`npm run start` 自动先执行 config；`worker/wrangler.toml` 不再纳入版本管理（保留 `.example`）；移除多余的 `.env.production`（Vite 会自动读取 `.env.local` 的 `VITE_` 变量）。
 - 留言/评论展示优化：`CommentThread` 改为「顶层评论 + 其下全部回复扁平到同一缩进层级」，回复只缩进一次、更深层级不再叠加缩进，每条非顶层评论标注「回复 @谁」；留言列在桌面端居中（`.guestbook-col`，820px），分隔线改为整列宽（`.comment-thread` 底边线）；修复原先评论集中在左侧、分隔线只到页面中部的问题。后端 `root_id` 归组已联调验证。
 - 分隔线补全：回复缩进由 `margin-left` 改为 `padding-left`，使两条评论之间的虚线铺满整列；项目详情页内容统一为居中列（`.project-detail` 960px），「核心实现」与「项目留言」之间的实线铺满该列。
+- 免卡部署调整（R2 → KV + 视频外链）：Cloudflare R2 需绑卡才能开通，改用 **Cloudflare KV** 存头像/项目封面（免卡、免费，经 `/media/*` 读取）；**项目视频改为外链**（B站/YouTube/直链），新增智能播放器 `src/components/ProjectVideo.jsx`（自动识别 B站/YouTube 页面链接转 iframe、直链用 `<video>`）；后台项目表单的视频由「上传」改为「链接输入」；后端移除视频上传接口与 R2 绑定，`wrangler.toml` 生成 `[[kv_namespaces]]`（`CF_KV_ID`）；本地 `wrangler dev` 验证头像上传与 `/media` 读取通过。
 
 ## 进行中
 
-- 项目进入「Cloudflare 上线」阶段：代码与配置已就绪，待用户创建 D1/R2、配置 secrets 并 `wrangler deploy`，以及创建 Pages 项目。
+- 项目进入「Cloudflare 上线」阶段：代码与配置已就绪，待用户创建 D1/KV、配置 secrets 并 `wrangler deploy`，以及创建 Pages 项目。
 - 需要统一 API 响应格式和校验规则。
 - 两套后端（Worker / Node）为同一套 API 的两种实现；本地用 `npm run start` 自动切换，线上以 Worker 为准。
 

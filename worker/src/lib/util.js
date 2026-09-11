@@ -14,6 +14,24 @@ export const extFromMime = (mime, fallback = '.png') => {
   return map[mime] || fallback;
 };
 
+const MIME_BY_EXT = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+  ogg: 'video/ogg',
+  mov: 'video/quicktime',
+};
+
+// KV 不保存 content-type，用扩展名推断
+export function contentTypeFromKey(key) {
+  const ext = String(key).split('.').pop().toLowerCase();
+  return MIME_BY_EXT[ext] || 'application/octet-stream';
+}
+
 export function mediaUrl(origin, key) {
   if (!key) return null;
   if (/^https?:\/\//i.test(key) || key.startsWith('/')) return key;

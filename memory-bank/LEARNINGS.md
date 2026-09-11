@@ -165,9 +165,9 @@ Serverless 运行时无状态、磁盘临时且不共享；`node:sqlite`、`node
 
 解决：
 
-- 数据库改用 Cloudflare D1（SQLite），文件改用 R2 对象存储。
-- 数据库只保存 R2 key，对外经 `/media/<key>` 返回绝对地址。
-- 本地开发用 Wrangler 模拟 D1/R2（`wrangler dev` + `wrangler d1 execute --local`）。
+- 数据库改用 Cloudflare D1（SQLite），文件改用 Cloudflare KV。
+- 数据库只保存 KV key，对外经 `/media/<key>` 返回绝对地址。
+- 本地开发用 Wrangler 模拟 D1/KV（`wrangler dev` + `wrangler d1 execute --local`）。
 
 以后注意：
 
@@ -232,6 +232,26 @@ Serverless 免费版要留意 CPU 限制；密码哈希优先用运行时的原�
 以后注意：
 
 每次推送前先 `git status` 与 `.gitignore` 核对；密钥只放环境变量/secret；如历史中已提交过密钥，必须视为已泄漏并轮换。
+
+## 2026-09-11 R2 需要绑卡，改用 KV + 视频外链
+
+现象：
+
+执行 `npx wrangler r2 bucket create` 报错：`Please enable R2 through the Cloudflare Dashboard. [code: 10042]`。
+
+原因：
+
+Cloudflare R2 属于付费产品，**即使只用免费额度，也要先在控制台开通并绑定支付方式**（信用卡）。没有银行卡就无法开通。
+
+解决：
+
+- 头像、项目封面改用 **Cloudflare KV**（免卡、免费，单值 ≤25MB、总量 1GB），经 Worker `/media/*` 读取。
+- 项目视频改为**外链**（B站/YouTube 页面链接或 `.mp4` 直链），前端新增 `ProjectVideo` 智能播放器自动识别并嵌入；后台视频由「上传文件」改为「填链接」。
+- `wrangler.toml` 的 `[[r2_buckets]]` 换成 `[[kv_namespaces]]`，`.env.local` 用 `CF_KV_ID`。
+
+以后注意：
+
+Serverless 免费方案里，对象存储（R2 / S3 类）通常要求绑定支付方式；**免卡**可选 KV（小文件）或数据库存小文件，大文件用外链（B站/YouTube）或国内对象存储。选型前先确认「是否必须绑卡」。
 
 ## 2026-09-11 Hono v4 的 jwt verify 必须显式指定算法
 

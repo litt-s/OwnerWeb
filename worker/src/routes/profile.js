@@ -22,7 +22,7 @@ r.post('/avatar', async (c) => {
   const bytes = base64ToBytes(m[2]);
   if (bytes.length > 2 * 1024 * 1024) return c.json({ error: '图片不能超过 2MB' }, 400);
   const key = `avatars/${Date.now()}-${Math.random().toString(36).slice(2)}${extFromMime(m[1])}`;
-  await c.env.MEDIA.put(key, bytes, { httpMetadata: { contentType: m[1] } });
+  await c.env.MEDIA.put(key, bytes);
   const user = c.get('user');
   await c.env.DB.prepare('UPDATE users SET avatar = ? WHERE id = ?').bind(key, user.id).run();
   const updated = await c.env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(user.id).first();

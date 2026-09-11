@@ -2,6 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useContent } from '../context/ContentContext';
 import PageShell from '../components/PageShell';
 import ProjectComments from '../components/ProjectComments';
+import ProjectVideo from '../components/ProjectVideo';
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
@@ -38,14 +39,11 @@ export default function ProjectDetailPage() {
 
         {project.video ? (
           <div className="proj-video">
-            <video controls poster={project.cover || ''} preload="metadata">
-              <source src={project.video} />
-              您的浏览器不支持视频播放。
-            </video>
+            <ProjectVideo src={project.video} poster={project.cover} />
           </div>
         ) : (
           <div className="proj-video no-video">
-            <p>该项目还没有上传演示视频</p>
+            <p>该项目还没有配置演示视频</p>
           </div>
         )}
 

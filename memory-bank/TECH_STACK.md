@@ -19,9 +19,9 @@
 运行时：Cloudflare Workers
 框架：Hono
 数据库：Cloudflare D1（SQLite）
-对象存储：Cloudflare R2（头像、项目封面、视频）
+对象存储：Cloudflare KV（头像、项目封面）；项目视频用外链
 鉴权：PBKDF2（Web Crypto）密码哈希 + hono/jwt Bearer Token
-上传：头像走 base64 JSON；项目封面/视频走 multipart
+上传：头像走 base64 JSON；项目封面走 multipart（视频改外链，不上传）
 ```
 
 后端（本地，可选，已归档）：
@@ -39,15 +39,15 @@
 ```text
 前端：Cloudflare Pages（连 GitHub 自动构建）
 后端：Cloudflare Workers（worker/）
-数据：D1 数据库 + R2 存储桶
+数据：D1 数据库 + KV 命名空间
 ```
 
 ## 2. 为什么这样选
 
-- Cloudflare Workers + D1 + R2 免费额度足够个人作品集，且 R2 免出网流量费，适合放视频。
+- Cloudflare Workers + D1 + KV 免费额度足够个人作品集，项目视频用外链，不占存储。
 - Hono 轻量、原生适配 Workers，路由/中间件清晰。
 - D1 是 SQLite，与本地数据模型一致，迁移成本低。
-- R2 替代本地磁盘，解决 Serverless 无持久化磁盘的问题。
+- KV 替代本地磁盘，解决 Serverless 无持久化磁盘的问题。
 - 前端通过 `VITE_API_BASE` 解耦，后端可替换（见「一键切换后端」）。
 - Node + Express 后端保留为本地开发备选，归档在桌面 `OwnerWeb-backend-node/`。
 
@@ -61,7 +61,7 @@ src/context      登录态（AuthContext）与内容上下文（ContentContext�
 src/services     认证、内容、评论等领域接口封装
 src/hooks        通用 React Hook
 src/styles       全局样式
-worker/          Cloudflare Workers 后端（Hono + D1 + R2，唯一在库后端）
+worker/          Cloudflare Workers 后端（Hono + D1 + KV，唯一在库后端）
 worker/src/lib   工具、播种、鉴权中间件
 worker/src/routes 各业务路由模块
 scripts/         一键切换/启动后端脚本
@@ -78,7 +78,7 @@ dist/            前端构建产物
 
 ```text
 .env.local 字段            生成到
-CF_WORKER_NAME/CF_D1_NAME/CF_D1_ID/CF_R2_BUCKET  -> worker/wrangler.toml
+CF_WORKER_NAME/CF_D1_NAME/CF_D1_ID/CF_KV_ID  -> worker/wrangler.toml
 JWT_SECRET/ADMIN_EMAIL/ADMIN_PASSWORD/CORS_ORIGIN -> worker/.dev.vars（本地）+ worker/.secrets.json（线上）
 VITE_API_BASE                                    -> 无需生成，Vite 自动读取 .env.local（仅 VITE_ 前缀暴露给前端）
 ```
@@ -94,7 +94,7 @@ VITE_API_BASE=线上 Worker 域名；本地留空走 Vite 代理
 Worker（`worker/wrangler.toml` 与 secrets）：
 
 ```text
-wrangler.toml 绑定：D1（binding DB，database_id）、R2（binding MEDIA，bucket_name）
+wrangler.toml 绑定：D1（binding DB，database_id）、KV（binding MEDIA，id）
 secret：JWT_SECRET、ADMIN_EMAIL、ADMIN_PASSWORD、CORS_ORIGIN
 ```
 
@@ -118,8 +118,8 @@ NODE_ENV、PORT、CORS_ORIGIN、DB_DIR、UPLOAD_DIR、JWT_SECRET、ADMIN_EMAIL�
 - 登录态统一经 `AuthContext`。
 - 两套后端实现**同一套 API**，前端不感知差异。
 - Worker 密码使用 **PBKDF2（Web Crypto）**；Node 后端使用 bcryptjs。两者哈希格式不同，数据不通用。
-- Worker 文件存 **R2**，数据库只保存 R2 key；对外通过 `/media/<key>` 读取，返回 Worker 绝对地址。
-- 头像上传用 **base64 JSON**（`{ dataUrl }`），项目封面/视频用 **multipart**（`FormData`）。
+- Worker 文件存 **KV**，数据库只保存 key；对外通过 `/media/<key>` 读取，返回 Worker 绝对地址。
+- 头像上传用 **base64 JSON**（`{ dataUrl }`），项目封面用 **multipart**（`FormData`）；视频用外链 URL。
 - D1/SQLite 连接需保证外键与索引；公开评论接口不返回 `email`/`user_id`。
 - 后台操作必须同时校验登录态和管理员角色。
 - 新增接口同步更新 `DATA_MODEL.md`；新增页面/路由同步更新 `ARCHITECTURE.md` 和 `DESIGN.md`。
@@ -161,7 +161,7 @@ Node（server/）：http://localhost:3001
 # 后端（Worker）
 cd worker
 npx wrangler d1 create ownerweb          # 首次，填 database_id
-npx wrangler r2 bucket create ownerweb-media
+npx wrangler kv namespace create MEDIA
 npx wrangler d1 execute ownerweb --remote --file=./schema.sql
 npx wrangler secret put JWT_SECRET / ADMIN_EMAIL / ADMIN_PASSWORD / CORS_ORIGIN
 npx wrangler deploy

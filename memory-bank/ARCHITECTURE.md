@@ -11,13 +11,13 @@
   -> 本地：Vite proxy 转发 /api 到本地后端（Worker:8787 或 Node:3001）
   -> 线上：Cloudflare Worker（Hono）
   -> D1 数据库（用户 / 留言 / 项目评论 / 项目 / 优势 / 站点内容）
-  -> R2 存储桶（头像 / 项目封面 / 视频），经 `/media/<key>` 读取
+  -> KV 命名空间（头像 / 项目封面），经 `/media/<key>` 读取；项目视频为外链
 ```
 
 后端有两种实现，接口一致，前端不感知：
 
 ```text
-线上主后端：worker/（Cloudflare Workers + Hono + D1 + R2）
+线上主后端：worker/（Cloudflare Workers + Hono + D1 + KV）
 本地可选后端：server/（Node + Express + node:sqlite + 本地磁盘，归档在桌面）
 ```
 
@@ -33,7 +33,7 @@
 基础请求层：src/api.js（支持 VITE_API_BASE）
 后端（线上）：worker/src（index + lib + routes）
 后端（本地）：server/（归档）
-存储：Cloudflare D1 + R2
+存储：Cloudflare D1 + KV
 启动脚本：scripts/backend.mjs、scripts/dev.mjs
 ```
 
@@ -78,7 +78,7 @@ AuthProvider -> 读取 token -> GET /api/auth/me -> 校验 JWT 与封禁状态 -
 SettingsPage
   -> PUT /api/profile 更新昵称
   -> POST /api/profile/avatar（base64 JSON { dataUrl }）
-     -> Worker：写入 R2，users.avatar 保存 R2 key
+     -> Worker：写入 KV，users.avatar 保存 KV key
      -> 返回头像绝对地址（Worker 经 /media/<key>）
   -> GET /api/auth/me 刷新上下文
 ```
@@ -108,7 +108,7 @@ ContentProvider -> services/projects.js -> GET /api/projects -> D1 projects 表
 AdminProjects
   -> POST/PUT/DELETE /api/admin/projects(/:id)
   -> POST /api/admin/projects/:id/cover | /video（multipart）
-     -> Worker：写入 R2，projects 表保存 R2 key
+     -> Worker：写入 KV，projects 表保存 KV key
   -> 删除项目同时删除其评论
 ```
 
@@ -175,6 +175,6 @@ scripts/dev.mjs 一键同时启动后端与前端
 - `AuthContext` 负责登录态，不直接操作数据库。
 - 后端负责参数校验、鉴权、文件处理和数据库操作（Worker 与 Node 实现同一套接口）。
 - D1/SQLite 保存用户、访客留言、项目评论、项目内容、个人优势、站点基础内容与账号资料。
-- Worker 文件存 R2，数据库只保存 key；对外经 `/media/<key>` 返回绝对地址。
+- Worker 文件存 KV，数据库只保存 key；对外经 `/media/<key>` 返回绝对地址。
 - `src/data/resume.js` 是静态兜底与初始化种子；已接管的内容模块以数据库为准。
-- 线上部署由 Cloudflare Pages（前端）+ Workers（API）+ D1 + R2 组成；本地开发由 Vite + 本地后端组成。
+- 线上部署由 Cloudflare Pages（前端）+ Workers（API）+ D1 + KV 组成；本地开发由 Vite + 本地后端组成。

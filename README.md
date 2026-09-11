@@ -2,7 +2,7 @@
 
 嵌入式软件工程师的个人作品集网站。包含全屏 3D PCB 首屏、个人经历、精选项目（含详情与视频）、个人优势、访客留言与项目评论、邮箱注册登录、账号设置和管理后台。
 
-线上采用 **GitHub + Cloudflare** 全免费部署：前端 Cloudflare Pages，后端 Cloudflare Workers + D1 + R2。
+线上采用 **GitHub + Cloudflare** 全免费部署：前端 Cloudflare Pages，后端 Cloudflare Workers + D1 + KV。
 
 ## 功能特性
 
@@ -25,7 +25,7 @@
 
 - Cloudflare Workers + Hono
 - 数据库：Cloudflare D1（SQLite）
-- 对象存储：Cloudflare R2（头像、项目封面、视频，经 `/media/*` 访问）
+- 对象存储：Cloudflare KV（头像、项目封面，经 `/media/*` 访问）；项目视频用外链（B站/YouTube/直链，自动嵌入播放）
 - 鉴权：PBKDF2（Web Crypto）+ `hono/jwt`
 
 后端（本地，可选，已归档在文件 `OwnerWeb-backend-node/`）：
@@ -41,12 +41,12 @@
 
 ```text
 src/            前端源码（pages / components / context / services / data / styles）
-worker/         Cloudflare Workers 后端（Hono + D1 + R2，唯一在库后端）
+worker/         Cloudflare Workers 后端（Hono + D1 + KV，唯一在库后端）
   src/index.js    入口：CORS、播种、健康检查、挂载路由、/media
   src/lib/        工具、播种、鉴权中间件
   src/routes/     auth / profile / public / admin / media
   schema.sql      D1 建表
-  wrangler.toml   D1 / R2 绑定与配置
+  wrangler.toml   D1 / KV 绑定与配置
 scripts/        一键检测/启动后端（backend.mjs、dev.mjs）
 functions/      Cloudflare Pages Functions（可选：同源代理 /api）
 deploy/         反向代理示例配置
@@ -64,7 +64,7 @@ Copy-Item .env.local.example .env.local
 npm run config
 ```
 
-`npm run config` 会据 `.env.local` 生成：`worker/wrangler.toml`（D1/R2 绑定）、`worker/.dev.vars`（本地密钥）、`worker/.secrets.json`（线上 secrets）。前端 `VITE_API_BASE` 由 Vite 自动从 `.env.local` 读取，无需额外文件。`.env.local` 已被 `.gitignore` 忽略。
+`npm run config` 会据 `.env.local` 生成：`worker/wrangler.toml`（D1/KV 绑定）、`worker/.dev.vars`（本地密钥）、`worker/.secrets.json`（线上 secrets）。前端 `VITE_API_BASE` 由 Vite 自动从 `.env.local` 读取，无需额外文件。`.env.local` 已被 `.gitignore` 忽略。
 
 一键启动（自动检测后端并启动前端；`npm run start` 会自动先跑 `config`）：
 
@@ -105,7 +105,7 @@ Node（server/）：http://localhost:3001
 
 | `.env.local` 字段 | 生成到 | 说明 |
 |---|---|---|
-| `CF_D1_ID` / `CF_D1_NAME` / `CF_R2_BUCKET` / `CF_WORKER_NAME` | `worker/wrangler.toml` | D1 / R2 绑定 |
+| `CF_D1_ID` / `CF_D1_NAME` / `CF_KV_ID` / `CF_WORKER_NAME` | `worker/wrangler.toml` | D1 / KV 绑定 |
 | `JWT_SECRET` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `CORS_ORIGIN` | `worker/.dev.vars`（本地）、`worker/.secrets.json`（线上） | 密钥 |
 | `VITE_API_BASE` | 无需生成，Vite 自动从 `.env.local` 读取 | 前端线上 API 地址 |
 
@@ -127,7 +127,7 @@ cd worker
 npm install
 npx wrangler login
 npx wrangler d1 create ownerweb            # 填 database_id 到 wrangler.toml
-npx wrangler r2 bucket create ownerweb-media
+npx wrangler kv namespace create MEDIA
 npx wrangler d1 execute ownerweb --remote --file=./schema.sql
 npx wrangler secret bulk .secrets.json     # 由 npm run config 从 .env.local 生成
 npx wrangler deploy

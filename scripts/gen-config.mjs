@@ -48,9 +48,9 @@ binding = "DB"
 database_name = "${get('CF_D1_NAME', 'ownerweb')}"
 database_id = "${get('CF_D1_ID', 'local-dev-placeholder')}"
 
-[[r2_buckets]]
+[[kv_namespaces]]
 binding = "MEDIA"
-bucket_name = "${get('CF_R2_BUCKET', 'ownerweb-media')}"
+id = "${get('CF_KV_ID', 'local-dev-placeholder')}"
 `;
   writeFileSync(resolve(ROOT, 'worker/wrangler.toml'), wrangler);
 
@@ -73,6 +73,7 @@ CORS_ORIGIN=${get('CORS_ORIGIN', 'http://localhost:5173')}
   // 且只有 VITE_ 前缀变量会暴露给前端，因此 VITE_API_BASE 直接从 .env.local 读取即可。
   console.log('[config] 已生成 worker/wrangler.toml、worker/.dev.vars、worker/.secrets.json');
   warnIfEmpty('CF_D1_ID');
+  warnIfEmpty('CF_KV_ID');
   return true;
 }
 

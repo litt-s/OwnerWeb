@@ -133,21 +133,20 @@ r.delete('/projects/:id', async (c) => {
   return c.json({ ok: true });
 });
 
-async function uploadProjectMedia(c, field, subdir) {
+// 封面存 KV；视频改为外链（通过项目 PUT 的 video 字段填写）
+async function uploadProjectCover(c) {
   const row = await c.env.DB.prepare('SELECT id FROM projects WHERE id = ?').bind(c.req.param('id')).first();
   if (!row) return c.json({ error: '项目不存在' }, 404);
   const form = await c.req.formData();
-  const file = form.get(field);
-  if (!file || typeof file === 'string') return c.json({ error: field === 'video' ? '未上传视频' : '未上传封面' }, 400);
-  const key = `projects/${subdir}/${row.id}-${Date.now()}${extFromMime(file.type, field === 'video' ? '.mp4' : '.png')}`;
-  await c.env.MEDIA.put(key, file.stream(), { httpMetadata: { contentType: file.type } });
-  const column = field === 'video' ? 'video' : 'cover';
-  await c.env.DB.prepare(`UPDATE projects SET ${column} = ?, updated_at = datetime('now') WHERE id = ?`).bind(key, row.id).run();
+  const file = form.get('cover');
+  if (!file || typeof file === 'string') return c.json({ error: '未上传封面' }, 400);
+  const key = `projects/covers/${row.id}-${Date.now()}${extFromMime(file.type, '.png')}`;
+  await c.env.MEDIA.put(key, await file.arrayBuffer());
+  await c.env.DB.prepare("UPDATE projects SET cover = ?, updated_at = datetime('now') WHERE id = ?").bind(key, row.id).run();
   const updated = await c.env.DB.prepare('SELECT * FROM projects WHERE id = ?').bind(row.id).first();
   return c.json({ project: projectDto(new URL(c.req.url).origin, updated) });
 }
-r.post('/projects/:id/cover', (c) => uploadProjectMedia(c, 'cover', 'covers'));
-r.post('/projects/:id/video', (c) => uploadProjectMedia(c, 'video', 'videos'));
+r.post('/projects/:id/cover', uploadProjectCover);
 
 /* ---------- 优势管理 ---------- */
 r.get('/strengths', async (c) => {

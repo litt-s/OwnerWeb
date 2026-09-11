@@ -21,7 +21,7 @@
 
 存储位置：
 
-- 线上 Worker：结构化数据存 D1；头像、项目视频和封面存 R2；数据库只保存 R2 key，对外经 `/media/<key>` 返回可访问的绝对地址。
+- 线上 Worker：结构化数据存 D1；头像和项目封面存 KV；数据库只保存 KV key，对外经 `/media/<key>` 返回可访问的绝对地址。项目视频不存文件，改为外链 URL（B站/YouTube/直链）。
 - 本地 Node（已归档）：SQLite 文件 + `server/uploads` 磁盘目录 + `/uploads` 静态访问。
 
 ## 2. projects 表
@@ -81,7 +81,7 @@ projects
 - `name` 必填，最长 100 字符。
 - `sort_order` 必须是不小于 1 的整数。
 - `tech` 和 `points` 接受数组或换行分隔文本，保存前去除空白项。
-- `video` 和 `cover` 可为空；上传后保存对象存储 key（Worker 存 R2，Node 存 `/uploads/projects/...`），对外由后端转换为可访问 URL。
+- `cover` 可为空；上传后保存存储 key（Worker 存 KV，Node 存 `/uploads/projects/...`），对外由后端转换为可访问 URL。`video` 保存外链 URL（B站/YouTube/直链），不存文件。
 - 公开接口返回上述序列化字段，不返回时间戳。
 
 初始化与兜底：
@@ -240,7 +240,7 @@ users
 | `email` | TEXT UNIQUE | 登录邮箱，必填 |
 | `password_hash` | TEXT | 密码哈希（Worker 用 PBKDF2；Node 用 bcrypt，格式不同、数据不通用） |
 | `nickname` | TEXT | 昵称，可为空 |
-| `avatar` | TEXT | 头像存储 key（Worker 为 R2 key，Node 为 `/uploads/...`），对外由后端转为 URL，可为空 |
+| `avatar` | TEXT | 头像存储 key（Worker 为 KV key，Node 为 `/uploads/...`），对外由后端转为 URL，可为空 |
 | `bio` | TEXT | 历史兼容字段，账号设置不再展示或更新，可为空 |
 | `role` | TEXT | `user` 或 `admin`，默认 `user` |
 | `banned` | INTEGER | `0` 正常，`1` 封禁 |

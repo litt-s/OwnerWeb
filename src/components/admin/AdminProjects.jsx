@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useContent } from '../../context/ContentContext';
+import ProjectVideo from '../ProjectVideo';
 import {
   fetchAdminProjects,
   createProject,
@@ -109,7 +110,7 @@ export default function AdminProjects({ token }) {
       await Promise.all([load(), reloadProjects()]);
       const saved = toDraft(project);
       setDraft(saved);
-      setMsg(exists ? '项目已保存' : '项目已创建，可继续上传视频或封面');
+      setMsg(exists ? '项目已保存' : '项目已创建，可继续上传封面或填写视频链接');
     } catch (error) {
       setErr(error.message);
     }
@@ -266,16 +267,16 @@ export default function AdminProjects({ token }) {
 
             <div className="editor-block media-block">
               <h4>视频与封面</h4>
-              <p className="editor-note">
-                老项目在未上传封面时继续使用内置 SVG 封面；新增项目上传封面后列表立即使用该图片。
-              </p>
               <div className="editor-field">
-                <label>演示视频</label>
-                <span className="media-path">{draft.video || '尚未上传视频'}</span>
-                <label className="file-btn">
-                  上传 / 替换视频
-                  <input id="admin-upload-video" type="file" accept="video/*" hidden onChange={() => uploadMedia('video')} />
-                </label>
+                <label>演示视频链接</label>
+                <input
+                  value={draft.video}
+                  onChange={(event) => set('video', event.target.value)}
+                  placeholder="B站 / YouTube 视频页链接，或 .mp4 直链"
+                />
+                <span className="editor-note">
+                  支持 B站、YouTube 页面链接（自动嵌入播放）或 .mp4/.webm 直链；留空则显示「未配置」。
+                </span>
               </div>
               <div className="editor-field">
                 <label>项目封面</label>
@@ -286,7 +287,7 @@ export default function AdminProjects({ token }) {
                 </label>
               </div>
               {draft.video && (
-                <video className="editor-video-preview" src={draft.video} controls preload="metadata" />
+                <ProjectVideo src={draft.video} poster={draft.cover} className="editor-video-preview" />
               )}
               {draft.cover && (
                 <img className="editor-cover-preview" src={draft.cover} alt="项目封面预览" />

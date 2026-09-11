@@ -86,12 +86,12 @@
 ## Phase 5：部署
 
 - [x] 5.1 确定前端静态托管平台：Cloudflare Pages（连 GitHub 自动构建）。
-- [x] 5.2 确定 API 托管方案：Cloudflare Workers + Hono + D1 + R2（全免费，R2 免出网费）。
-- [x] 5.3 后端从 Node/Express/SQLite 重写为 Workers/Hono/D1/R2，并模块化（`worker/src/lib`、`worker/src/routes`）。
+- [x] 5.2 确定 API 托管方案：Cloudflare Workers + Hono + D1 + KV（全免费，KV 免费）。
+- [x] 5.3 后端从 Node/Express/SQLite 重写为 Workers/Hono/D1/KV，并模块化（`worker/src/lib`、`worker/src/routes`）。
 - [x] 5.4 一键切换后端：`scripts/backend.mjs` + `scripts/dev.mjs`，Vite 自动代理到检测到的后端端口。
 - [x] 5.5 配置 SPA 回退（`public/_redirects`）与可选同源代理（`functions/api/[[path]].js`）。
 - [x] 5.6 归档 Node 后端到桌面 `OwnerWeb-backend-node/`，从项目移除 `server/`（保留可回放）。
 - [x] 5.7 清理敏感信息并推送 GitHub（origin = `https://github.com/litt-s/OwnerWeb.git`，Gitee 保留为 `gitee`）。
-- [ ] 5.8 在 Cloudflare 创建 D1/R2、配置 secrets 并 `npx wrangler deploy`。
+- [ ] 5.8 在 Cloudflare 创建 D1/KV、配置 secrets 并 `npx wrangler deploy`。
 - [ ] 5.9 配置 Pages 环境变量（`VITE_API_BASE` 或 `API_ORIGIN`）与自定义域名 HTTPS。
 - [ ] 5.10 上线后按 `DEPLOY.md` 的验证清单逐项检查。
