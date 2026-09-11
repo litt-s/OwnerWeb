@@ -6,6 +6,7 @@ import { existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+import { generate } from './gen-config.mjs';
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -41,6 +42,9 @@ export function detectBackend() {
 // 直接运行本文件时：启动检测到的后端
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]);
 if (isMain) {
+  if (existsSync(resolve(ROOT, '.env.local'))) {
+    try { generate(); } catch (e) { console.warn('[config] 生成失败：' + e.message); }
+  }
   const backend = detectBackend();
   if (!backend) {
     console.error('未找到后端：请在 worker/（Cloudflare）或 server/（Node）中放入一个后端。');

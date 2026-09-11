@@ -39,15 +39,33 @@ npx wrangler r2 bucket create ownerweb-media
 # 初始化数据库表
 npx wrangler d1 execute ownerweb --remote --file=./schema.sql
 
-# 配置密钥（不写入代码）
-npx wrangler secret put JWT_SECRET
-npx wrangler secret put ADMIN_EMAIL
-npx wrangler secret put ADMIN_PASSWORD
-npx wrangler secret put CORS_ORIGIN        # 前端 Pages 域名
+# 配置密钥：先在根目录 .env.local 填好，运行 `npm run config` 生成 worker/.secrets.json
+npx wrangler secret bulk .secrets.json
 
 # 部署
 npx wrangler deploy
 ```
+
+## 2.1 隐私与配置集中到 .env.local
+
+所有需要填写的 ID / 密码 / 邮箱 / 域名集中在根目录 **`.env.local`**（已被 `.gitignore` 忽略）：
+
+```text
+CF_WORKER_NAME / CF_D1_NAME / CF_D1_ID / CF_R2_BUCKET
+ADMIN_EMAIL / ADMIN_PASSWORD / JWT_SECRET
+CORS_ORIGIN / VITE_API_BASE
+```
+
+`npm run config`（脚本 `scripts/gen-config.mjs`）据 `.env.local` 生成：
+
+```text
+worker/wrangler.toml    D1/R2 绑定（database_id、bucket_name）
+worker/.dev.vars        本地 wrangler dev 的密钥
+worker/.secrets.json    线上 secrets（wrangler secret bulk 用）
+.env.production         前端生产 VITE_API_BASE
+```
+
+`.env.local` 不存在时脚本跳过；`npm run start` 会自动先执行 `config`。提交到仓库的是模板 `.env.local.example`，真实 `.env.local` 与生成物均不提交。
 
 首次访问任意 `/api/*` 时会自动建管理员并播种站点内容（项目/优势/个人介绍）。
 

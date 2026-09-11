@@ -74,6 +74,17 @@ dist/            前端构建产物
 
 ## 4. 环境变量与密钥
 
+所有隐私与配置集中在根目录 **`.env.local`**（`.gitignore` 忽略），由 `npm run config`（`scripts/gen-config.mjs`）生成到各处：
+
+```text
+.env.local 字段            生成到
+CF_WORKER_NAME/CF_D1_NAME/CF_D1_ID/CF_R2_BUCKET  -> worker/wrangler.toml
+JWT_SECRET/ADMIN_EMAIL/ADMIN_PASSWORD/CORS_ORIGIN -> worker/.dev.vars（本地）+ worker/.secrets.json（线上）
+VITE_API_BASE                                    -> .env.production
+```
+
+仓库提交的是模板 `.env.local.example`；真实 `.env.local`、`worker/wrangler.toml`、`worker/.dev.vars`、`worker/.secrets.json`、`.env.production` 均不提交。
+
 前端（构建期）：
 
 ```text

@@ -1,8 +1,15 @@
 // 一键启动：自动检测并启动后端 + 启动前端（vite 代理会自动指向该后端端口）
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectBackend, ROOT } from './backend.mjs';
+import { generate } from './gen-config.mjs';
+
+// 若存在 .env.local，先据它生成各配置（wrangler.toml / .dev.vars / .env.production）
+if (existsSync(resolve(ROOT, '.env.local'))) {
+  try { generate(); } catch (e) { console.warn('[config] 生成失败：' + e.message); }
+}
 
 const backend = detectBackend();
 if (!backend) {

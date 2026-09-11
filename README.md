@@ -56,7 +56,17 @@ memory-bank/    项目上下文文档（PRD / 架构 / 数据模型 / 部署等�
 
 ## 本地开发
 
-一键启动（自动检测后端并启动前端）：
+先准备隐私与配置：复制 `.env.local.example` 为 `.env.local`，填写 ID / 密码 / 邮箱等，然后生成各处配置。
+
+```powershell
+Copy-Item .env.local.example .env.local
+# 编辑 .env.local 后：
+npm run config
+```
+
+`npm run config` 会据 `.env.local` 生成：`worker/wrangler.toml`（D1/R2 绑定）、`worker/.dev.vars`（本地密钥）、`worker/.secrets.json`（线上 secrets）、`.env.production`（前端 `VITE_API_BASE`）。`.env.local` 已被 `.gitignore` 忽略。
+
+一键启动（自动检测后端并启动前端；`npm run start` 会自动先跑 `config`）：
 
 ```bash
 npm install
@@ -91,9 +101,22 @@ Node（server/）：http://localhost:3001
 
 ## 环境变量与密钥
 
-- 前端：`VITE_API_BASE`（线上填 Worker 域名；本地留空走 Vite 代理）。
-- Worker：`wrangler.toml` 绑定 D1（`DB`）与 R2（`MEDIA`）；密钥用 `wrangler secret put` 设置 `JWT_SECRET`、`ADMIN_EMAIL`、`ADMIN_PASSWORD`、`CORS_ORIGIN`。
-- 密钥只放 Cloudflare secret 或本地 `.env`，**不写入代码或提交仓库**；`.env`、`worker/.dev.vars`、数据库与上传目录均已被 `.gitignore` 忽略。
+所有隐私与配置集中在根目录 **`.env.local`**（已被 `.gitignore` 忽略），由 `npm run config` 生成到各处：
+
+| `.env.local` 字段 | 生成到 | 说明 |
+|---|---|---|
+| `CF_D1_ID` / `CF_D1_NAME` / `CF_R2_BUCKET` / `CF_WORKER_NAME` | `worker/wrangler.toml` | D1 / R2 绑定 |
+| `JWT_SECRET` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `CORS_ORIGIN` | `worker/.dev.vars`（本地）、`worker/.secrets.json`（线上） | 密钥 |
+| `VITE_API_BASE` | `.env.production` | 前端线上 API 地址 |
+
+线上 secrets 上传：
+
+```bash
+cd worker
+npx wrangler secret bulk .secrets.json
+```
+
+密钥只放 `.env.local` 或 Cloudflare secret，**不写入代码或提交仓库**；`.env.local`、`worker/.dev.vars`、`worker/.secrets.json`、`worker/wrangler.toml`、`.env.production` 均已被 `.gitignore` 忽略。
 
 ## 部署（GitHub + Cloudflare）
 
@@ -106,7 +129,7 @@ npx wrangler login
 npx wrangler d1 create ownerweb            # 填 database_id 到 wrangler.toml
 npx wrangler r2 bucket create ownerweb-media
 npx wrangler d1 execute ownerweb --remote --file=./schema.sql
-npx wrangler secret put JWT_SECRET / ADMIN_EMAIL / ADMIN_PASSWORD / CORS_ORIGIN
+npx wrangler secret bulk .secrets.json     # 由 npm run config 从 .env.local 生成
 npx wrangler deploy
 ```
 

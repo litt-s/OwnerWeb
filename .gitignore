@@ -7,12 +7,17 @@ worker/node_modules/
 dist/
 worker/.wrangler/
 
-# Local environment / secrets
+# Local environment / secrets（隐私与配置统一放 .env.local，由 npm run config 生成各配置）
 .env
 .env.local
+.env.local.*
+.env.production
 .env.*.local
 server/.env
 worker/.dev.vars
+worker/.secrets.json
+# 由 .env.local 生成的 Worker 配置（保留 wrangler.toml.example 模板）
+worker/wrangler.toml
 # 保留示例文件
 !.env.production.example
 

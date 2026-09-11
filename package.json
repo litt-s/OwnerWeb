@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "config": "node scripts/gen-config.mjs",
     "dev": "vite",
     "start": "node scripts/dev.mjs",
     "backend": "node scripts/backend.mjs",

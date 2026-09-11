@@ -1,0 +1,13 @@
+# 示例：真正的 worker/wrangler.toml 由 `npm run config` 从根目录 .env.local 生成
+name = "ownerweb-api"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ownerweb"
+database_id = "你的 D1 database_id"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "ownerweb-media"
