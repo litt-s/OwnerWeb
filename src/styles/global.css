@@ -541,6 +541,9 @@ ul {
   justify-content: center;
   gap: 16px;
 }
+.hero-quicklinks {
+  display: none;
+}
 /* ---------- Experience ---------- */
 .exp-grid {
   display: grid;
@@ -2108,6 +2111,32 @@ iframe.editor-video-preview {
   .admin-table .row.head,
   .admin-table.users .row.head {
     display: none;
+  }
+}
+
+/* 窄屏：3D 标注隐藏，改用按钮导航 */
+@media (max-width: 820px) {
+  .hero-quicklinks {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 24px;
+    width: 100%;
+  }
+  .hero-quicklinks a {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+    padding: 9px 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.05);
+    white-space: nowrap;
+  }
+  .hero-quicklinks a:active {
+    border-color: var(--accent);
+    color: var(--accent);
   }
 }
 

@@ -340,12 +340,13 @@ function McuModel({ dragRef, onHover, goTo }) {
     };
   };
 
+  // lx/lz 为标签中心；把标签放在线段末端圆圈之外，避免与圆圈重叠
   const callouts = [
-    { label: tex.labels.projects, lx: -9.5, lz: 0, line: lineBetween(-3.95, 0, -8.6, 0) },
-    { label: tex.labels.experience, lx: 0, lz: -5.2, line: lineBetween(0, -2.95, 0, -4.7) },
-    { label: tex.labels.strengths, lx: 9.5, lz: -1.3, line: lineBetween(4.9, -1.3, 8.6, -1.3) },
-    { label: tex.labels.contact, lx: 9.5, lz: 2.0, line: lineBetween(4.9, 2.0, 8.6, 2.0) },
-    { label: tex.labels.comments, lx: -9.5, lz: 1.6, line: lineBetween(-5.6, 1.6, -8.6, 1.6) },
+    { label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-3.95, 0, -8.6, 0) },
+    { label: tex.labels.experience, lx: 0, lz: -5.5, line: lineBetween(0, -2.95, 0, -4.7) },
+    { label: tex.labels.strengths, lx: 10.3, lz: -1.3, line: lineBetween(4.9, -1.3, 8.6, -1.3) },
+    { label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(4.9, 2.0, 8.6, 2.0) },
+    { label: tex.labels.comments, lx: -10.3, lz: 1.6, line: lineBetween(-5.6, 1.6, -8.6, 1.6) },
   ];
 
   const bind = (key) => ({
@@ -618,7 +619,7 @@ function McuModel({ dragRef, onHover, goTo }) {
                 <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} side={THREE.DoubleSide} />
               </mesh>
               <mesh position={[c.lx, 0.22, c.lz]} rotation={[-Math.PI / 2, 0, 0]}>
-                <planeGeometry args={[3.8, 0.92]} />
+                <planeGeometry args={[2.9, 0.7]} />
                 <meshBasicMaterial map={c.label} transparent depthWrite={false} side={THREE.DoubleSide} />
               </mesh>
             </group>

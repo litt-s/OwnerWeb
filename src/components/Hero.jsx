@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react';
+import { Link } from 'react-router-dom';
 import Aurora from './Aurora';
 import { useContent } from '../context/ContentContext';
 
@@ -33,6 +34,15 @@ export default function Hero() {
           </h1>
           <p className="hero-sub">{hero.sub}</p>
         </div>
+
+        {/* 窄屏下 3D 标注会隐藏，这里提供等价的按钮导航 */}
+        <nav className="hero-quicklinks" aria-label="快速导航">
+          <Link to="/projects">精选项目</Link>
+          <Link to="/experience">个人经历</Link>
+          <Link to="/strengths">个人优势</Link>
+          <Link to="/comments">访客留言</Link>
+          <a href="#contact">联系我</a>
+        </nav>
       </div>
     </section>
   );
