@@ -80,10 +80,10 @@ dist/            前端构建产物
 .env.local 字段            生成到
 CF_WORKER_NAME/CF_D1_NAME/CF_D1_ID/CF_R2_BUCKET  -> worker/wrangler.toml
 JWT_SECRET/ADMIN_EMAIL/ADMIN_PASSWORD/CORS_ORIGIN -> worker/.dev.vars（本地）+ worker/.secrets.json（线上）
-VITE_API_BASE                                    -> .env.production
+VITE_API_BASE                                    -> 无需生成，Vite 自动读取 .env.local（仅 VITE_ 前缀暴露给前端）
 ```
 
-仓库提交的是模板 `.env.local.example`；真实 `.env.local`、`worker/wrangler.toml`、`worker/.dev.vars`、`worker/.secrets.json`、`.env.production` 均不提交。
+仓库提交的是模板 `.env.local.example`；真实 `.env.local`、`worker/wrangler.toml`、`worker/.dev.vars`、`worker/.secrets.json` 均不提交。
 
 前端（构建期）：
 

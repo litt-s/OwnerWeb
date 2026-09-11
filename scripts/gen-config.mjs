@@ -1,8 +1,8 @@
-// 读取根目录 .env.local，生成各配置文件
+// 读取根目录 .env.local，生成 Worker 侧配置文件
 //   worker/wrangler.toml   Cloudflare Worker 的 D1 / R2 绑定
 //   worker/.dev.vars       本地 wrangler dev 的密钥
 //   worker/.secrets.json   线上 secrets（wrangler secret bulk 用）
-//   .env.production        前端生产 VITE_API_BASE
+// 注：不生成 .env.production；Vite 会自动读取 .env.local 的 VITE_ 前缀变量
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -69,11 +69,10 @@ CORS_ORIGIN=${get('CORS_ORIGIN', 'http://localhost:5173')}
   };
   writeFileSync(resolve(ROOT, 'worker/.secrets.json'), JSON.stringify(secrets, null, 2) + '\n');
 
-  writeFileSync(resolve(ROOT, '.env.production'), `VITE_API_BASE=${get('VITE_API_BASE')}\n`);
-
-  console.log('[config] 已生成 worker/wrangler.toml、worker/.dev.vars、worker/.secrets.json、.env.production');
+  // 注意：不再生成 .env.production。Vite 会自动加载根目录 .env.local，
+  // 且只有 VITE_ 前缀变量会暴露给前端，因此 VITE_API_BASE 直接从 .env.local 读取即可。
+  console.log('[config] 已生成 worker/wrangler.toml、worker/.dev.vars、worker/.secrets.json');
   warnIfEmpty('CF_D1_ID');
-  warnIfEmpty('VITE_API_BASE');
   return true;
 }
 

@@ -9,7 +9,7 @@
 | 数据库 | SQLite → **D1** | D1 数据库 `ownerweb` |
 | 文件 | 本地磁盘 → **R2** | R2 存储桶 `ownerweb-media`（免出网流量费） |
 
-> 代码位置：后端已从 `server/`（本地 Node+SQLite）改写为 `worker/`（Workers+Hono+D1+R2）。**本地开发仍用 `server/`**，线上用 `worker/`，接口完全一致。
+> 代码位置：后端为 `worker/`（Workers+Hono+D1+R2）。Node 后端已归档到桌面，可选放回 `server/` 用于本地开发；两者接口完全一致，本地用 `npm run start` 自动切换。
 
 免费额度足够个人作品集：Workers 10 万请求/天、D1 5GB、R2 10GB 且出网免费。
 
@@ -29,7 +29,11 @@ npx wrangler login
 npx wrangler d1 create ownerweb        # 复制返回的 database_id
 npx wrangler r2 bucket create ownerweb-media
 ```
-把 `database_id` 填进 `worker/wrangler.toml` 的 `[[d1_databases]]`。
+把返回的 `database_id` 填进根目录 **`.env.local`** 的 `CF_D1_ID`（先 `Copy-Item .env.local.example .env.local`），然后生成配置：
+```bash
+npm run config
+```
+`npm run config` 会据 `.env.local` 生成 `worker/wrangler.toml`（D1/R2 绑定）等。
 
 ### 3. 初始化数据库表
 ```bash
@@ -37,10 +41,10 @@ npx wrangler d1 execute ownerweb --remote --file=./schema.sql
 ```
 
 ### 4. 配置密钥（不要写进代码/仓库）
+在 `.env.local` 填好 `JWT_SECRET` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `CORS_ORIGIN`，运行 `npm run config` 生成 `worker/.secrets.json`，再上传：
 ```bash
-npx wrangler secret put JWT_SECRET        # 一段足够随机的长字符串
-npx wrangler secret put ADMIN_PASSWORD    # 管理员初始密码
-npx wrangler secret put CORS_ORIGIN       # 前端 Pages 域名，如 https://ownerweb.pages.dev
+cd worker
+npx wrangler secret bulk .secrets.json
 ```
 
 ### 5. 部署
@@ -54,12 +58,8 @@ npx wrangler deploy
 
 ## 二、部署前端（Cloudflare Pages）
 
-1. 复制 `.env.production.example` 为 `.env.production`，填入 Worker 域名：
-   ```
-   VITE_API_BASE=https://ownerweb-api.<你的子域>.workers.dev
-   ```
-2. 推送到 GitHub。
-3. Cloudflare 控制台 → Workers & Pages → Pages → 连接 GitHub 仓库，构建配置：
+1. 推送到 GitHub。
+2. Cloudflare 控制台 → Workers & Pages → Pages → 连接 GitHub 仓库，构建配置：
 
    | 项 | 值 |
    |---|---|
@@ -67,9 +67,9 @@ npx wrangler deploy
    | Build output directory | `dist` |
    | 环境变量 | `NODE_VERSION=20`，`VITE_API_BASE=https://ownerweb-api.<子域>.workers.dev` |
 
-   （也可以在 Pages 里设 `VITE_API_BASE` 而不用 `.env.production`。）
+   在 Pages 里设 `VITE_API_BASE`（Worker 域名，公开信息）；本地构建时 Vite 会自动读取 `.env.local` 的同名变量，无需额外文件。
 
-4. SPA 回退：仓库已含 `public/_redirects`（`/* /index.html 200`），构建后自动生效，保证刷新 `/admin`、`/projects` 不 404。
+3. SPA 回退：仓库已含 `public/_redirects`（`/* /index.html 200`），构建后自动生效，保证刷新 `/admin`、`/projects` 不 404。
 
 ---
 

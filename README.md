@@ -64,7 +64,7 @@ Copy-Item .env.local.example .env.local
 npm run config
 ```
 
-`npm run config` 会据 `.env.local` 生成：`worker/wrangler.toml`（D1/R2 绑定）、`worker/.dev.vars`（本地密钥）、`worker/.secrets.json`（线上 secrets）、`.env.production`（前端 `VITE_API_BASE`）。`.env.local` 已被 `.gitignore` 忽略。
+`npm run config` 会据 `.env.local` 生成：`worker/wrangler.toml`（D1/R2 绑定）、`worker/.dev.vars`（本地密钥）、`worker/.secrets.json`（线上 secrets）。前端 `VITE_API_BASE` 由 Vite 自动从 `.env.local` 读取，无需额外文件。`.env.local` 已被 `.gitignore` 忽略。
 
 一键启动（自动检测后端并启动前端；`npm run start` 会自动先跑 `config`）：
 
@@ -107,7 +107,7 @@ Node（server/）：http://localhost:3001
 |---|---|---|
 | `CF_D1_ID` / `CF_D1_NAME` / `CF_R2_BUCKET` / `CF_WORKER_NAME` | `worker/wrangler.toml` | D1 / R2 绑定 |
 | `JWT_SECRET` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `CORS_ORIGIN` | `worker/.dev.vars`（本地）、`worker/.secrets.json`（线上） | 密钥 |
-| `VITE_API_BASE` | `.env.production` | 前端线上 API 地址 |
+| `VITE_API_BASE` | 无需生成，Vite 自动从 `.env.local` 读取 | 前端线上 API 地址 |
 
 线上 secrets 上传：
 
@@ -116,7 +116,7 @@ cd worker
 npx wrangler secret bulk .secrets.json
 ```
 
-密钥只放 `.env.local` 或 Cloudflare secret，**不写入代码或提交仓库**；`.env.local`、`worker/.dev.vars`、`worker/.secrets.json`、`worker/wrangler.toml`、`.env.production` 均已被 `.gitignore` 忽略。
+密钥只放 `.env.local` 或 Cloudflare secret，**不写入代码或提交仓库**；`.env.local`、`worker/.dev.vars`、`worker/.secrets.json`、`worker/wrangler.toml` 均已被 `.gitignore` 忽略。
 
 ## 部署（GitHub + Cloudflare）
 

@@ -62,8 +62,9 @@ CORS_ORIGIN / VITE_API_BASE
 worker/wrangler.toml    D1/R2 绑定（database_id、bucket_name）
 worker/.dev.vars        本地 wrangler dev 的密钥
 worker/.secrets.json    线上 secrets（wrangler secret bulk 用）
-.env.production         前端生产 VITE_API_BASE
 ```
+
+`VITE_API_BASE` 不生成文件：Vite 会自动加载根目录 `.env.local`，且只有 `VITE_` 前缀变量会暴露给前端，直接读取即可。线上构建在 Cloudflare Pages 设置环境变量 `VITE_API_BASE`（或本地构建时 `.env.local` 已填）。
 
 `.env.local` 不存在时脚本跳过；`npm run start` 会自动先执行 `config`。提交到仓库的是模板 `.env.local.example`，真实 `.env.local` 与生成物均不提交。
 
@@ -71,14 +72,8 @@ worker/.secrets.json    线上 secrets（wrangler secret bulk 用）
 
 ## 3. 部署前端（Cloudflare Pages）
 
-1. 复制 `.env.production.example` 为 `.env.production`，填入 Worker 域名：
-
-```text
-VITE_API_BASE=https://ownerweb-api.<你的子域>.workers.dev
-```
-
-2. 推送到 GitHub。
-3. Cloudflare 控制台 → Workers & Pages → Pages → 连接 GitHub 仓库，构建配置：
+1. 推送到 GitHub。
+2. Cloudflare 控制台 → Workers & Pages → Pages → 连接 GitHub 仓库，构建配置（`VITE_API_BASE` 在 Pages 环境变量里设为 Worker 域名；本地构建时 Vite 会自动读取 `.env.local`）：
 
 ```text
 Build command：npm run build

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { detectBackend, ROOT } from './backend.mjs';
 import { generate } from './gen-config.mjs';
 
-// 若存在 .env.local，先据它生成各配置（wrangler.toml / .dev.vars / .env.production）
+// 若存在 .env.local，先据它生成 Worker 侧配置（wrangler.toml / .dev.vars / .secrets.json）
 if (existsSync(resolve(ROOT, '.env.local'))) {
   try { generate(); } catch (e) { console.warn('[config] 生成失败：' + e.message); }
 }

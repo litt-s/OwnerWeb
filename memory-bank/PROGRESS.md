@@ -65,6 +65,7 @@
 - README 已重写并推送：技术栈、项目结构、本地一键开发、环境变量与密钥、GitHub + Cloudflare 部署、文档索引。
 - Cloudflare Worker 本地联调跑通：`wrangler dev`（本地模拟 D1/R2）+ `wrangler d1 execute --local --file=schema.sql` 初始化；验证通过 `/api/health`、`/api/content/site`、`/api/projects`（2 个）、`/api/strengths`（6 条）、邮箱注册、管理员登录、访客留言写入、管理员删除留言、用户列表；前端 `http://localhost:5173` 经 Vite 代理 `/api` 到 Worker 返回正常。
 - 修复 Hono v4 鉴权缺陷：`jwtVerify` 需显式传 `'HS256'`，否则所有带 token 请求统一 401（详见 `LEARNINGS.md`）。
+- 隐私与配置集中化：新增 `.env.local`（gitignore）与模板 `.env.local.example`；`scripts/gen-config.mjs`（`npm run config`）据 `.env.local` 生成 `worker/wrangler.toml`、`worker/.dev.vars`、`worker/.secrets.json`；`npm run start` 自动先执行 config；`worker/wrangler.toml` 不再纳入版本管理（保留 `.example`）；移除多余的 `.env.production`（Vite 会自动读取 `.env.local` 的 `VITE_` 变量）。
 
 ## 进行中
 
