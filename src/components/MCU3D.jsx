@@ -1,6 +1,6 @@
-import { useRef, useMemo, useState } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import * as THREE from 'three';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useNavigate } from 'react-router-dom';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -205,7 +205,24 @@ function drawChip(ctx) {
   ctx.fill();
 }
 
+// 相机按容器宽高比自适应：窄屏拉远，保证 PCB 两端完整入画
+function ResponsiveCamera() {
+  const { camera, size } = useThree();
+  useEffect(() => {
+    const aspect = size.width / Math.max(1, size.height);
+    const fov = (camera.fov * Math.PI) / 180;
+    const targetWidth = aspect < 1.3 ? 15 : 27;
+    const z = targetWidth / (2 * Math.tan(fov / 2) * aspect);
+    camera.position.z = Math.max(16, Math.min(46, z));
+    camera.position.y = camera.position.z * 0.08;
+    camera.updateProjectionMatrix();
+  }, [camera, size]);
+  return null;
+}
+
 function McuModel({ dragRef, onHover, goTo }) {
+  const { size } = useThree();
+  const narrow = size.width / Math.max(1, size.height) < 1.3;
   const modelRef = useRef();
   const floatRef = useRef();
   const blinkMat = useRef();
@@ -585,8 +602,8 @@ function McuModel({ dragRef, onHover, goTo }) {
             </mesh>
           ))}
 
-          {/* solid leader lines + page labels (rotate with the board) */}
-          {callouts.map((c, ci) => (
+          {/* solid leader lines + page labels (rotate with the board)；窄屏隐藏标注避免裁切 */}
+          {!narrow && callouts.map((c, ci) => (
             <group key={ci}>
               <mesh position={c.line.mid} rotation={[0, c.line.angle, 0]}>
                 <boxGeometry args={[0.03, 0.02, c.line.len]} />
@@ -601,7 +618,7 @@ function McuModel({ dragRef, onHover, goTo }) {
                 <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} side={THREE.DoubleSide} />
               </mesh>
               <mesh position={[c.lx, 0.22, c.lz]} rotation={[-Math.PI / 2, 0, 0]}>
-                <planeGeometry args={[1.9, 0.46]} />
+                <planeGeometry args={[3.8, 0.92]} />
                 <meshBasicMaterial map={c.label} transparent depthWrite={false} side={THREE.DoubleSide} />
               </mesh>
             </group>
@@ -652,9 +669,10 @@ export default function MCU3D() {
       <Canvas
         className="mcu-canvas"
         camera={{ position: [0, 1.5, 19.5], fov: 40 }}
-        dpr={[1, 2]}
+        dpr={[1, 1.75]}
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
       >
+        <ResponsiveCamera />
         <ambientLight intensity={0.75} />
         <directionalLight position={[6, 12, 8]} intensity={1.4} />
         <directionalLight position={[-10, 5, -8]} intensity={0.45} color="#ff8a86" />

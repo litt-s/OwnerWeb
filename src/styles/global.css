@@ -2056,15 +2056,31 @@ iframe.editor-video-preview {
     flex-direction: column;
     text-align: center;
   }
+  .nav-inner {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    padding: 10px 14px;
+  }
+  .nav-brand-text {
+    display: none;
+  }
   .nav-actions {
+    order: 2;
     gap: 6px;
   }
   .nav-cta {
-    padding: 9px 14px;
+    padding: 8px 14px;
     font-size: 13px;
+    white-space: nowrap;
   }
   .nav-cta.ghost {
-    padding: 9px 12px;
+    padding: 8px 12px;
+  }
+  .nav-search {
+    order: 3;
+    flex-basis: 100%;
+    max-width: none;
+    margin: 0;
   }
   .comment-row {
     grid-template-columns: 1fr;

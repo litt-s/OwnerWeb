@@ -133,7 +133,8 @@ export default function Aurora(props) {
     const renderer = new Renderer({
       alpha: true,
       premultipliedAlpha: true,
-      antialias: true
+      antialias: true,
+      dpr: Math.min(window.devicePixelRatio || 1, 1.5)
     });
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
@@ -181,6 +182,7 @@ export default function Aurora(props) {
     ctn.appendChild(gl.canvas);
 
     let animateId = 0;
+    let running = false;
     const update = t => {
       animateId = requestAnimationFrame(update);
       const { time = t * 0.01, speed = 1.0 } = propsRef.current;
@@ -195,12 +197,30 @@ export default function Aurora(props) {
       });
       renderer.render({ scene: mesh });
     };
-    animateId = requestAnimationFrame(update);
+    const start = () => {
+      if (running) return;
+      running = true;
+      animateId = requestAnimationFrame(update);
+    };
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(animateId);
+      animateId = 0;
+    };
+
+    // 离开视口 / 页面隐藏时暂停渲染，降低卡顿与耗电
+    const io = new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop()), { threshold: 0 });
+    io.observe(ctn);
+    const onVisibility = () => (document.hidden ? stop() : start());
+    document.addEventListener('visibilitychange', onVisibility);
 
     resize();
+    start();
 
     return () => {
-      cancelAnimationFrame(animateId);
+      stop();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('resize', resize);
       if (ctn && gl.canvas.parentNode === ctn) {
         ctn.removeChild(gl.canvas);
