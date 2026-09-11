@@ -67,6 +67,7 @@
 - 修复 Hono v4 鉴权缺陷：`jwtVerify` 需显式传 `'HS256'`，否则所有带 token 请求统一 401（详见 `LEARNINGS.md`）。
 - 隐私与配置集中化：新增 `.env.local`（gitignore）与模板 `.env.local.example`；`scripts/gen-config.mjs`（`npm run config`）据 `.env.local` 生成 `worker/wrangler.toml`、`worker/.dev.vars`、`worker/.secrets.json`；`npm run start` 自动先执行 config；`worker/wrangler.toml` 不再纳入版本管理（保留 `.example`）；移除多余的 `.env.production`（Vite 会自动读取 `.env.local` 的 `VITE_` 变量）。
 - 留言/评论展示优化：`CommentThread` 改为「顶层评论 + 其下全部回复扁平到同一缩进层级」，回复只缩进一次、更深层级不再叠加缩进，每条非顶层评论标注「回复 @谁」；留言列在桌面端居中（`.guestbook-col`，820px），分隔线改为整列宽（`.comment-thread` 底边线）；修复原先评论集中在左侧、分隔线只到页面中部的问题。后端 `root_id` 归组已联调验证。
+- 分隔线补全：回复缩进由 `margin-left` 改为 `padding-left`，使两条评论之间的虚线铺满整列；项目详情页内容统一为居中列（`.project-detail` 960px），「核心实现」与「项目留言」之间的实线铺满该列。
 
 ## 进行中
 

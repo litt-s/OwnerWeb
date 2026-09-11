@@ -1846,9 +1846,10 @@ a.channel:hover {
 .comment-thread:last-child {
   border-bottom: none;
 }
-/* 回复只缩进一次；更深层级不再叠加缩进 */
+/* 回复只缩进一次；更深层级不再叠加缩进。
+   用 padding 而非 margin 缩进，保证上方的虚线分隔线铺满整列宽度 */
 .comment.reply {
-  margin-left: 44px;
+  padding-left: 44px;
   border-top: 1px dashed var(--line);
 }
 .reply-btn {
@@ -1915,6 +1916,8 @@ a.channel:hover {
   color: var(--accent);
 }
 .project-detail {
+  max-width: 960px;
+  margin-inline: auto;
   padding-bottom: 60px;
 }
 .proj-hero {
@@ -1964,7 +1967,7 @@ a.channel:hover {
   margin-top: 8px;
 }
 .proj-detail-body {
-  max-width: 880px;
+  max-width: none;
 }
 .proj-detail-body h3 {
   font-size: 20px;
@@ -1982,7 +1985,7 @@ a.channel:hover {
   margin-top: 20px;
 }
 .proj-comments {
-  max-width: 760px;
+  max-width: none;
   margin-top: 40px;
   border-top: 1px solid var(--line);
   padding-top: 8px;
