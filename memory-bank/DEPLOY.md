@@ -3,139 +3,124 @@
 代码仓库：
 
 ```text
-https://gitee.com/soft-hardli/my-blog.git
+GitHub：https://github.com/litt-s/OwnerWeb.git   （origin）
+Gitee ：https://gitee.com/soft-hardli/my-blog.git （gitee，保留）
 ```
+
+部署形态：**GitHub + Cloudflare**（前端 Pages，后端 Workers，数据 D1 + R2），全免费。
 
 ## 1. 前置条件
 
-- Node.js 版本必须支持 `node:sqlite`。
+- Node.js 16+ 与 npm。
 - 已安装根目录依赖：
 
 ```bash
 npm install
 ```
 
-- 已安装 API 依赖：
+- 已安装 Worker 依赖并登录 Wrangler：
 
 ```bash
-cd server
+cd worker
 npm install
+npx wrangler login
 ```
 
-- 已在 `server/.env` 配置：
-
-```text
-NODE_ENV=production
-PORT=3001
-CORS_ORIGIN=https://blog.example.com
-DB_DIR=/var/lib/ownerweb/data
-UPLOAD_DIR=/var/lib/ownerweb/uploads
-JWT_SECRET=强随机密钥
-ADMIN_EMAIL=管理员邮箱
-ADMIN_PASSWORD=强密码
-```
-
-如果还没有环境变量文件，先复制示例：
-
-```powershell
-Copy-Item server/.env.example server/.env
-```
-
-API 启动时必须存在 `JWT_SECRET`，否则服务会直接退出。初始管理员只有在 `ADMIN_EMAIL` 和 `ADMIN_PASSWORD` 同时配置时才会创建。
-
-## 2. 本地启动
-
-需要两个终端。
-
-终端一，启动 API：
+## 2. 部署后端（Workers + D1 + R2）
 
 ```bash
-cd server
-npm run dev
+cd worker
+
+# 创建 D1 与 R2
+npx wrangler d1 create ownerweb            # 复制返回的 database_id
+npx wrangler r2 bucket create ownerweb-media
+# 把 database_id 填进 worker/wrangler.toml 的 [[d1_databases]]
+
+# 初始化数据库表
+npx wrangler d1 execute ownerweb --remote --file=./schema.sql
+
+# 配置密钥（不写入代码）
+npx wrangler secret put JWT_SECRET
+npx wrangler secret put ADMIN_EMAIL
+npx wrangler secret put ADMIN_PASSWORD
+npx wrangler secret put CORS_ORIGIN        # 前端 Pages 域名
+
+# 部署
+npx wrangler deploy
 ```
 
-终端二，启动前端：
+首次访问任意 `/api/*` 时会自动建管理员并播种站点内容（项目/优势/个人介绍）。
 
-```bash
-npm run dev
-```
+## 3. 部署前端（Cloudflare Pages）
 
-本地地址：
+1. 复制 `.env.production.example` 为 `.env.production`，填入 Worker 域名：
 
 ```text
-前端：http://localhost:5173
-API：http://localhost:3001
+VITE_API_BASE=https://ownerweb-api.<你的子域>.workers.dev
 ```
 
-重要协作规则：AI 不自动打开浏览器。需要用户查看页面时，只提供以上文本链接，由用户手动打开。
-
-当前 `vite.config.js` 已配置 `server.open: false`，启动前端开发服务不会自动打开浏览器。
-
-## 3. 构建前端
-
-```bash
-npm run build
-```
-
-构建产物在：
+2. 推送到 GitHub。
+3. Cloudflare 控制台 → Workers & Pages → Pages → 连接 GitHub 仓库，构建配置：
 
 ```text
-dist/
+Build command：npm run build
+Build output directory：dist
+环境变量：NODE_VERSION=20，VITE_API_BASE=https://ownerweb-api.<子域>.workers.dev
 ```
 
-## 4. API 服务部署
+4. SPA 回退：仓库含 `public/_redirects`（`/* /index.html 200`），构建后自动生效，保证刷新 `/admin`、`/projects` 不 404。
 
-当前项目还没有确定的线上部署平台。部署 API 时必须满足：
+## 4. 可选：同源代理（免 CORS）
 
-- 使用进程守护工具运行 `server/server.js`。
-- 生产环境显式配置 `JWT_SECRET`。
-- 生产环境必须设置 `NODE_ENV=production`；缺少 `CORS_ORIGIN`、`DB_DIR` 或 `UPLOAD_DIR` 时 API 会拒绝启动。
-- 生产环境显式配置 `CORS_ORIGIN`，填写真实前端 HTTPS 地址；多个来源用逗号分隔。
-- 初始管理员账号密码通过环境变量注入。
-- `DB_DIR` 和 `UPLOAD_DIR` 必须指向服务器持久化磁盘；相对路径相对于 `server/` 目录解析。
-- 数据库目录必须允许 API 进程读写，并纳入定期备份。
-- 上传目录必须允许 API 进程读写，并纳入定期备份。
-- 首次启动新版 API 时会自动把旧 `comments` 表数据拆入两张新评论表，迁移成功后删除旧表。
-- 首次启动时，如果 `projects` 表为空，会使用 `src/data/resume.js` 初始化项目数据。
-- 首次启动时，如果 `site_content` 表为空，会使用 `src/data/resume.js` 初始化 Hero、身份联系信息和经历内容。
-- `server/uploads/projects/videos/` 和 `server/uploads/projects/covers/` 必须随 `server/uploads/` 持久化。
-- API 域名必须允许前端域名跨域访问，当前代码已启用 `cors()`。
-- 上传目录必须通过 `/uploads` 暴露。
-- API 健康检查为 `GET /api/health`，返回 `{"ok":true,"service":"ownerweb-api"}` 时表示数据库连接正常。
+仓库含 `functions/api/[[path]].js`（Pages Function）：
 
-## 5. 前端部署
+- 前端不设 `VITE_API_BASE`（走同源 `/api`）
+- Pages 环境变量加 `API_ORIGIN = https://ownerweb-api.<子域>.workers.dev`
 
-当前项目还没有确定的线上域名和托管平台。部署静态前端时必须满足：
+头像/视频由 Worker `/media/*` 提供，返回绝对地址，`<img>/<video>` 跨域加载无需 CORS。
 
-- 托管 `dist/` 静态文件。
-- 将 `/api/*` 反向代理到 API 服务。
-- 将 `/uploads/*` 反向代理到 API 服务或静态存储。
-- 上传项目视频时，反向代理必须允许足够大的请求体；当前应用端限制为 500MB。
-- Nginx 配置可参考 `deploy/nginx.conf.example`，其中包含 History fallback、`/api/`、`/uploads/` 和 500MB 请求体配置。
-- 为 React Router 配置 History 回退，未知路径回退到 `index.html`。
+## 5. 本地开发（一键切换后端）
+
+后端放哪个用哪个：有 `server/` 用 Node，否则用 Worker。
+
+```bash
+npm run start      # 一键：自动检测后端 + 启动前端
+npm run backend    # 只启动检测到的后端
+npm run dev        # 只启动前端
+```
+
+首次使用 Worker 本地环境：
+
+```bash
+cd worker && npm install
+npx wrangler d1 execute ownerweb --local --file=./schema.sql
+```
+
+强制指定：`$env:BACKEND="node"` 或 `$env:BACKEND="worker"`。
+
+本地地址：前端 `http://localhost:5173`；Worker `http://localhost:8787`；Node `http://localhost:3001`。
 
 ## 6. 上线验证
 
-- 首页能打开，视觉背景和导航正常。
-- `/experience`、`/projects`、`/strengths`、`/comments` 能打开。
-- `/experience` 的身份、教育认证、经历简介和统计读取后台站点内容。
-- `/strengths` 能读取后台维护的优势数据。
-- 项目详情页能打开并播放演示视频。
-- `/projects` 和 `/projects/:id` 能读取后台维护的项目数据。
-- 注册新账号成功。
-- 登录、退出、刷新后登录态恢复正常。
-- 账号设置中的昵称修改和头像上传成功。
-- 密码修改成功，旧密码不能再登录。
-- 访客留言和回复能提交并展示。
-- 项目详情页能提交顶层评论，并能看到任意层级回复。
-- 管理员能分别删除访客留言和项目评论。
-- 管理员能新增、编辑、删除项目；删除项目前出现二次确认。
-- 管理员能上传或替换项目视频和封面；公网访问对应媒体 URL 正常。
-- 管理员能新增、编辑、删除个人优势，并调整排序。
-- 管理员能修改 Hero、身份联系信息、教育认证和经历内容；保存后前台刷新可见。
-- 管理员能查看、调整、封禁、解封和删除用户。
-- 普通用户访问 `/admin` 时被拒绝。
-- `GET /api/health` 返回 200，且 API 能访问持久化数据库目录。
-- 重启 API 后用户、评论、项目内容、个人优势和站点配置仍然存在。
-- 从后台上传的视频和封面在重启 API 后仍可通过 `/uploads/` 访问。
-- 生产环境只允许配置的前端来源通过 CORS 访问 API。
+- 首页、`/experience`、`/projects`、`/strengths`、`/comments` 能打开。
+- 注册新账号、登录、退出、刷新后登录态正常。
+- 账号设置中昵称修改、头像上传成功；头像经 `/media/...` 可访问。
+- 密码修改成功后旧密码不能登录。
+- 访客留言与项目评论（含任意层级回复）能提交并展示。
+- 管理员能删除留言/评论、管理用户、管理项目/优势/站点内容、上传项目封面/视频。
+- 项目详情页能播放演示视频（R2 出网免费）。
+- 刷新 `/projects`、`/admin` 不 404。
+- `GET /api/health` 返回 200。
+- 重新部署 Worker 后，D1 数据与 R2 文件仍在。
+
+## 7. 常见问题
+
+| 现象 | 原因 / 解决 |
+|---|---|
+| 前端请求失败 / CORS | Worker 未设 `CORS_ORIGIN`；或 `VITE_API_BASE` 填错 |
+| 刷新 `/admin` 404 | `public/_redirects` 未生效（确认构建输出 `dist/_redirects`） |
+| `no such table` | 未执行 `wrangler d1 execute ... --file=./schema.sql` |
+| 管理员登录不了 | 未设 `ADMIN_EMAIL` / `ADMIN_PASSWORD` secret |
+| 上传报错 | 未创建 R2 桶，或 `wrangler.toml` 未绑定 `r2_buckets` |
+| Worker CPU 超限 | 免费版 CPU 10ms；PBKDF2 迭代数见 `worker/src/password.js`，可调低 |
+| 图片不显示 | `/media/*` 路由或 R2 绑定问题 |

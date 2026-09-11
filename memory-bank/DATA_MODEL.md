@@ -19,11 +19,10 @@
 - 个人优势内容
 - Hero、个人身份、联系信息和经历内容
 
-文件系统保存：
+存储位置：
 
-- 用户上传头像
-- 项目上传视频和封面
-- SQLite 数据库文件
+- 线上 Worker：结构化数据存 D1；头像、项目视频和封面存 R2；数据库只保存 R2 key，对外经 `/media/<key>` 返回可访问的绝对地址。
+- 本地 Node（已归档）：SQLite 文件 + `server/uploads` 磁盘目录 + `/uploads` 静态访问。
 
 ## 2. projects 表
 
@@ -82,12 +81,12 @@ projects
 - `name` 必填，最长 100 字符。
 - `sort_order` 必须是不小于 1 的整数。
 - `tech` 和 `points` 接受数组或换行分隔文本，保存前去除空白项。
-- `video` 和 `cover` 可为空；上传后保存 `/uploads/projects/...` 路径。
+- `video` 和 `cover` 可为空；上传后保存对象存储 key（Worker 存 R2，Node 存 `/uploads/projects/...`），对外由后端转换为可访问 URL。
 - 公开接口返回上述序列化字段，不返回时间戳。
 
 初始化与兜底：
 
-- `projects` 表为空时，`server/db.js` 使用 `src/data/resume.js` 中的项目初始化。
+- `projects` 表为空时，后端播种逻辑（Worker `worker/src/lib/seed.js`；Node `server/db.js`）使用 `src/data/resume.js` 中的项目初始化。
 - 前端 `ContentContext` 先保留 `resume.js` 作为静态兜底，公开接口成功后使用数据库数据。
 - 老项目 `yuhu` 和 `zhiyun` 在未上传封面时继续使用前端 SVG 封面。
 
@@ -163,7 +162,7 @@ strengths
 
 初始化与兜底：
 
-- `strengths` 表为空时，`server/db.js` 使用 `src/data/resume.js` 中的优势初始化。
+- `strengths` 表为空时，后端播种逻辑（Worker `worker/src/lib/seed.js`；Node `server/db.js`）使用 `src/data/resume.js` 中的优势初始化。
 - 前端 `ContentContext` 保留 `resume.js` 优势作为静态兜底，公开接口成功后使用数据库数据。
 
 ## 4. site_content 表
@@ -222,7 +221,7 @@ site_content
 
 初始化与兜底：
 
-- 表为空时，`server/db.js` 使用 `resume.js` 的个人基础信息、Hero 和经历初始化。
+- 表为空时，后端播种逻辑（Worker `worker/src/lib/seed.js`；Node `server/db.js`）使用 `resume.js` 的个人基础信息、Hero 和经历初始化。
 - 前端 `ContentContext` 使用 `resume.js` 作为异常兜底，公开接口成功后合并并使用数据库数据。
 
 ## 5. users 表
@@ -239,9 +238,9 @@ users
 |---|---|---|
 | `id` | INTEGER PK | 自增用户 ID |
 | `email` | TEXT UNIQUE | 登录邮箱，必填 |
-| `password_hash` | TEXT | bcrypt 哈希 |
+| `password_hash` | TEXT | 密码哈希（Worker 用 PBKDF2；Node 用 bcrypt，格式不同、数据不通用） |
 | `nickname` | TEXT | 昵称，可为空 |
-| `avatar` | TEXT | 头像 URL，可为空 |
+| `avatar` | TEXT | 头像存储 key（Worker 为 R2 key，Node 为 `/uploads/...`），对外由后端转为 URL，可为空 |
 | `bio` | TEXT | 历史兼容字段，账号设置不再展示或更新，可为空 |
 | `role` | TEXT | `user` 或 `admin`，默认 `user` |
 | `banned` | INTEGER | `0` 正常，`1` 封禁 |
@@ -401,7 +400,7 @@ project_comments
 | POST | `/api/auth/login` | 邮箱登录，返回 token 和用户 | 否 |
 | GET | `/api/auth/me` | 恢复登录态 | 是 |
 | PUT | `/api/profile` | 修改昵称 | 是 |
-| POST | `/api/profile/avatar` | 上传头像，multipart 字段名 `avatar` | 是 |
+| POST | `/api/profile/avatar` | 上传头像，JSON `{ dataUrl }`（base64） | 是 |
 | PUT | `/api/profile/password` | 修改密码 | 是 |
 | GET | `/api/strengths` | 获取个人优势列表 | 否 |
 | GET | `/api/content/site` | 获取 Hero、身份联系信息和经历内容 | 否 |
@@ -439,8 +438,9 @@ project_comments
 
 ## 11. 管理员鉴权
 
-- 密码使用 bcryptjs 哈希后保存。
-- API 启动时必须配置 `JWT_SECRET`，缺失时直接退出。
+- 密码哈希：Worker 使用 PBKDF2（Web Crypto），Node 后端使用 bcryptjs。
+- JWT：Worker 使用 `hono/jwt`，Node 后端使用 `jsonwebtoken`；两者用同一 `JWT_SECRET` 概念。
+- 必须配置 `JWT_SECRET`，缺失时鉴权不可用。
 - 初始管理员仅在 `ADMIN_EMAIL` 和 `ADMIN_PASSWORD` 同时配置时创建。
 - 登录成功返回 JWT。
 - JWT payload 包含 `id` 和 `role`。

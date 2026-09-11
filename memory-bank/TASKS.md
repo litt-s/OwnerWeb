@@ -73,7 +73,8 @@
 - [x] 3.22 修复移除背景图后头像卡整体不显示的问题：为 `.portrait-media` 补充 `aspect-ratio: 4 / 5` 作为高度来源，并清理已失效的 `.portrait-media img` 规则。
 - [x] 3.23 硬币位置与交互升级：硬币下移并深入腔体（translateZ 真深度）、悬停方向按鼠标所在侧决定（左区向右转、右区向左转，区域扩大到整块卡片）、支持鼠标拖动旋转并在松手后缓动回正。
 - [x] 3.24 硬币深度感与表面 3D 化：硬币加俯仰角与高光/反光，投影改落到腔体地板，四壁提亮并加轻微相机视差；ONLINE 小红点改为沿硬币内部圆环公转（标签保持水平），遵循 prefers-reduced-motion。
-- [ ] 3.25 硬币改为固定光源的动态反光：高光层脱离硬币自转（独立轮廓层），每帧按硬币角度计算镜面反射强度与菲涅尔边缘光，驱动高光位置、横向压缩与透明度，拖动/旋转时反光真实滑动。
+- [~] 3.25 硬币改为固定光源的动态反光（被 3.26 取代：CSS 假高光方案放弃）。
+- [x] 3.26 将个人介绍页 CSS 硬币替换为 three.js 真实金属硬币（`src/components/Portrait3D.jsx`）：程序化环境贴图产生真实镜面反射、圆角倒角（LatheGeometry），悬停上下俯仰 + 左右旋转、鼠标拖拽旋转、移出回正，反光对齐 Hero PCB 的 PBR 质感。
 
 ## Phase 4：验证
 
@@ -84,8 +85,13 @@
 
 ## Phase 5：部署
 
-- [ ] 5.1 确定前端静态托管平台。
-- [ ] 5.2 确定 API 服务托管方案。
-- [ ] 5.3 配置 `/api` 和 `/uploads` 反向代理。
-- [ ] 5.4 配置自定义域名和 HTTPS。
-- [ ] 5.5 上线后按 `DEPLOY.md` 的验证清单逐项检查。
+- [x] 5.1 确定前端静态托管平台：Cloudflare Pages（连 GitHub 自动构建）。
+- [x] 5.2 确定 API 托管方案：Cloudflare Workers + Hono + D1 + R2（全免费，R2 免出网费）。
+- [x] 5.3 后端从 Node/Express/SQLite 重写为 Workers/Hono/D1/R2，并模块化（`worker/src/lib`、`worker/src/routes`）。
+- [x] 5.4 一键切换后端：`scripts/backend.mjs` + `scripts/dev.mjs`，Vite 自动代理到检测到的后端端口。
+- [x] 5.5 配置 SPA 回退（`public/_redirects`）与可选同源代理（`functions/api/[[path]].js`）。
+- [x] 5.6 归档 Node 后端到桌面 `OwnerWeb-backend-node/`，从项目移除 `server/`（保留可回放）。
+- [x] 5.7 清理敏感信息并推送 GitHub（origin = `https://github.com/litt-s/OwnerWeb.git`，Gitee 保留为 `gitee`）。
+- [ ] 5.8 在 Cloudflare 创建 D1/R2、配置 secrets 并 `npx wrangler deploy`。
+- [ ] 5.9 配置 Pages 环境变量（`VITE_API_BASE` 或 `API_ORIGIN`）与自定义域名 HTTPS。
+- [ ] 5.10 上线后按 `DEPLOY.md` 的验证清单逐项检查。

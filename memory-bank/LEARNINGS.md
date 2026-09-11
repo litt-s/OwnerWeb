@@ -152,3 +152,83 @@ Agentrouter 的 GLM 上游只接受 `text` 类型消息内容。一旦对话中�
 以后注意：
 
 删除充当尺寸来源的填充元素（图片、占位块）时，必须同时给父容器补上显式尺寸或宽高比；容器内若只剩绝对定位子元素，父级不会自动撑高。
+
+## 2026-09-11 Serverless 无持久化磁盘：SQLite 与本地文件不可用
+
+现象：
+
+计划把 Node + Express + SQLite 后端迁到 Serverless（Cloudflare Workers / 云函数）时，数据库文件与 `server/uploads` 本地磁盘无法持久保存，实例重启即丢失。
+
+原因：
+
+Serverless 运行时无状态、磁盘临时且不共享；`node:sqlite`、`node:fs` 等 Node 能力在 Workers 也不可用。
+
+解决：
+
+- 数据库改用 Cloudflare D1（SQLite），文件改用 R2 对象存储。
+- 数据库只保存 R2 key，对外经 `/media/<key>` 返回绝对地址。
+- 本地开发用 Wrangler 模拟 D1/R2（`wrangler dev` + `wrangler d1 execute --local`）。
+
+以后注意：
+
+选 Serverless 前先确认「数据库 + 文件存储」是否持久；纯静态前端可直接 Serverless，但带数据库/上传的后端必须换成托管数据库 + 对象存储。
+
+## 2026-09-11 Workers 免费版 CPU 限制：不要用 bcrypt 做密码哈希
+
+现象：
+
+把后端迁到 Cloudflare Workers 后，用 bcryptjs 做密码哈希可能超过免费版每请求 10ms 的 CPU 限制，导致请求失败。
+
+原因：
+
+bcrypt 是纯 JS 实现、CPU 开销大；Workers 免费版 CPU 预算很小，付费版才宽裕。
+
+解决：
+
+- Worker 端改用 **PBKDF2（Web Crypto `crypto.subtle`）**，原生实现、开销可控。
+- Node 后端仍用 bcryptjs；两者哈希格式不同，数据不通用。
+
+以后注意：
+
+Serverless 免费版要留意 CPU 限制；密码哈希优先用运行时的原生加密能力（Web Crypto），并控制迭代次数。
+
+## 2026-09-11 两套后端容易分叉：前端解耦 + 一键切换
+
+现象：
+
+同时维护 Node（本地）与 Worker（线上）两套后端时，接口与字段容易改一处漏一处，行为不一致。
+
+原因：
+
+两套后端是独立代码，改动不会自动同步；本地与线上运行时不同（Node vs Workers）。
+
+解决：
+
+- 让两套后端实现**同一套 API**，前端只认 `VITE_API_BASE`。
+- 新增 `scripts/backend.mjs` 自动检测「项目里放了哪个后端」，`scripts/dev.mjs` 一键启动，Vite 代理自动指向对应端口。
+- 本地开发默认用 Worker（一套代码），Node 后端归档到桌面备选。
+
+以后注意：
+
+多后端并存时，务必约定统一 API 契约并做自动化切换，避免手工同步；能只维护一套就只维护一套。
+
+## 2026-09-11 推送 GitHub 前必须清理敏感信息
+
+现象：
+
+准备推送到新的 GitHub 仓库时，需确认账号、密码、密钥等不会泄漏。
+
+原因：
+
+`wrangler.toml` 里写了管理员邮箱，`.env`、数据库、上传目录等本地文件可能被误提交。
+
+解决：
+
+- 管理员邮箱/密码/`JWT_SECRET` 改用 `wrangler secret put`，不写入提交文件。
+- 完善 `.gitignore`（`.env`、`worker/.dev.vars`、`worker/.wrangler`、`node_modules`、`dist`、`*.db`、上传目录等）。
+- 用 `git ls-files` 与历史检索确认从未提交过 `.env`；扫描源码无硬编码密钥。
+- 保留 Gitee 为 `gitee`，`origin` 指向 GitHub。
+
+以后注意：
+
+每次推送前先 `git status` 与 `.gitignore` 核对；密钥只放环境变量/secret；如历史中已提交过密钥，必须视为已泄漏并轮换。

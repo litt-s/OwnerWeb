@@ -2,124 +2,160 @@
 
 ## 1. 技术栈结论
 
-当前版本采用：
+前端：
 
 ```text
-前端框架：Vite + React 18 + JavaScript JSX
+框架：Vite + React 18 + JavaScript JSX
 路由：React Router DOM 6
 样式：普通 CSS
 视觉增强：Three.js + @react-three/fiber + OGL
-后端：Node.js + Express
+请求封装：src/api.js（支持 VITE_API_BASE）
+业务接口：src/services/
+```
+
+后端（线上，主）：
+
+```text
+运行时：Cloudflare Workers
+框架：Hono
+数据库：Cloudflare D1（SQLite）
+对象存储：Cloudflare R2（头像、项目封面、视频）
+鉴权：PBKDF2（Web Crypto）密码哈希 + hono/jwt Bearer Token
+上传：头像走 base64 JSON；项目封面/视频走 multipart
+```
+
+后端（本地，可选，已归档）：
+
+```text
+运行时：Node.js
+框架：Express
 数据库：SQLite（node:sqlite DatabaseSync）
-鉴权：bcryptjs 密码哈希 + jsonwebtoken Bearer Token
-文件上传：multer
-调用方式：标准 HTTP fetch，统一封装在 src/api.js
-业务接口：领域服务统一封装在 src/services/
-部署形态：前端静态构建 + 独立 Node API 服务
+鉴权：bcryptjs + jsonwebtoken
+上传：本地 server/uploads 磁盘 + /uploads 静态目录
+```
+
+部署形态：
+
+```text
+前端：Cloudflare Pages（连 GitHub 自动构建）
+后端：Cloudflare Workers（worker/）
+数据：D1 数据库 + R2 存储桶
 ```
 
 ## 2. 为什么这样选
 
-- Vite 启动快，适合持续迭代个人站。
-- React 适合把首页、项目详情、账号和管理后台拆成页面与组件。
-- React Router 支持项目详情、登录、后台等独立 URL。
-- 普通 CSS 保持依赖少，当前视觉体系已经集中在 `src/styles/global.css`。
-- Three.js、@react-three/fiber 和 OGL 支撑首页的科技感视觉场景。
-- Express API 结构直观，便于实现认证、资料、留言和后台接口。
-- SQLite 适合单人作品站的本地数据存储，运维成本低。
-- JWT 适合前后端分离的登录态管理。
+- Cloudflare Workers + D1 + R2 免费额度足够个人作品集，且 R2 免出网流量费，适合放视频。
+- Hono 轻量、原生适配 Workers，路由/中间件清晰。
+- D1 是 SQLite，与本地数据模型一致，迁移成本低。
+- R2 替代本地磁盘，解决 Serverless 无持久化磁盘的问题。
+- 前端通过 `VITE_API_BASE` 解耦，后端可替换（见「一键切换后端」）。
+- Node + Express 后端保留为本地开发备选，归档在桌面 `OwnerWeb-backend-node/`。
 
 ## 3. 目录约定
 
 ```text
-src/pages       页面组件
-src/components  首页区块、留言区、视觉组件和通用组件
-src/data        简历、项目和个人介绍等静态数据
-src/context     登录态与用户上下文
-src/services    认证、内容、评论等领域接口封装
-src/hooks       通用 React Hook
-src/styles      全局样式
-server          Express API、SQLite 初始化与数据库文件
-server/uploads  用户头像与项目媒体上传目录
-deploy          公网反向代理示例配置
-memory-bank     项目上下文文档
-public          静态资源，包括项目演示视频
-dist            前端构建产物
+src/pages        页面组件
+src/components   首页区块、留言/评论、视觉组件、后台子组件
+src/data         简历、项目和个人介绍等静态兜底/种子数据
+src/context      登录态（AuthContext）与内容上下文（ContentContext）
+src/services     认证、内容、评论等领域接口封装
+src/hooks        通用 React Hook
+src/styles       全局样式
+worker/          Cloudflare Workers 后端（Hono + D1 + R2，唯一在库后端）
+worker/src/lib   工具、播种、鉴权中间件
+worker/src/routes 各业务路由模块
+scripts/         一键切换/启动后端脚本
+functions/       Cloudflare Pages Functions（可选：同源代理 /api）
+deploy/          公网反向代理示例配置
+memory-bank      项目上下文文档
+public/          静态资源，包括项目演示视频与 SPA 回退 _redirects
+dist/            前端构建产物
 ```
 
-## 4. 环境变量
+## 4. 环境变量与密钥
 
-API 服务读取 `server/.env`：
+前端（构建期）：
 
 ```text
-NODE_ENV=运行环境，生产部署设置为 production
-PORT=API 端口，默认 3001
-CORS_ORIGIN=允许访问 API 的前端来源，多个来源用逗号分隔
-DB_DIR=SQLite 数据目录，相对路径相对于 server/，生产环境建议使用绝对路径
-UPLOAD_DIR=上传文件目录，相对路径相对于 server/，生产环境建议使用绝对路径
-JWT_SECRET=JWT 签名密钥，生产环境必须使用强随机值
-ADMIN_EMAIL=初始管理员邮箱
-ADMIN_PASSWORD=初始管理员密码
+VITE_API_BASE=线上 Worker 域名；本地留空走 Vite 代理
+```
+
+Worker（`worker/wrangler.toml` 与 secrets）：
+
+```text
+wrangler.toml 绑定：D1（binding DB，database_id）、R2（binding MEDIA，bucket_name）
+secret：JWT_SECRET、ADMIN_EMAIL、ADMIN_PASSWORD、CORS_ORIGIN
+```
+
+Node 后端（`server/.env`，归档时保留）：
+
+```text
+NODE_ENV、PORT、CORS_ORIGIN、DB_DIR、UPLOAD_DIR、JWT_SECRET、ADMIN_EMAIL、ADMIN_PASSWORD
 ```
 
 注意：
 
-- API 启动时必须配置 `JWT_SECRET`，缺失时直接退出。
-- `NODE_ENV=production` 时，`CORS_ORIGIN`、`DB_DIR` 和 `UPLOAD_DIR` 都是必填项。
-- 初始管理员仅在 `ADMIN_EMAIL` 和 `ADMIN_PASSWORD` 同时配置时创建。
-- 生产环境必须显式配置 `JWT_SECRET`，不能使用开发默认值。
-- 初始管理员密码必须通过环境变量注入，不能用代码里的默认弱密码。
-- 公网环境应将 `CORS_ORIGIN` 配置为真实前端 HTTPS 地址，不使用任意来源。
-- `DB_DIR` 和 `UPLOAD_DIR` 必须使用持久化存储；相对路径相对于 `server/` 目录解析。
-- `.env`、数据库文件和上传目录不应提交到 Git。
+- 密钥只放 Cloudflare secret 或本地 `.env`，**不写入代码或提交仓库**。
+- 初始管理员在 `ADMIN_EMAIL` 与 `ADMIN_PASSWORD` 同时存在时创建。
+- `CORS_ORIGIN` 为前端 Pages 域名（多个用逗号分隔）；未配置时允许任意来源。
+- `.env`、`server/.env`、`worker/.dev.vars`、数据库与上传目录均被 `.gitignore` 忽略。
 
 ## 5. 编码约束
 
-- 页面组件不直接写 `fetch`；`src/api.js` 只负责基础请求封装，业务接口统一放在 `src/services/`。
-- 动态内容请求使用 `cache: 'no-store'`，避免后台更新后浏览器继续使用旧响应。
-- 登录态统一通过 `AuthContext` 读写，不散落多个 localStorage 逻辑。
-- `src/data/resume.js` 是静态兜底数据和项目初始化种子数据；已接管的内容模块以 SQLite 为准。
-- 访客留言、项目评论、项目内容、个人优势、站点基础内容、用户、头像等动态数据必须走 Express API。
-- 访客留言和项目评论分别保存在 `guestbook_comments` 与 `project_comments`，不再混用 `topic` 字段。
-- 项目评论的项目 ID 以 `projects` 表为准，Express 校验 `projectId` 必须存在。
-- SQLite 连接必须开启 `PRAGMA foreign_keys = ON`，保证用户与评论外键策略生效。
-- 密码只能以 bcrypt 哈希保存，不能明文入库。
-- JWT 不能写入前端源码。
+- 页面组件不直接写 `fetch`；统一经 `src/api.js` + `src/services/`。
+- 动态内容请求使用 `cache: 'no-store'`。
+- 登录态统一经 `AuthContext`。
+- 两套后端实现**同一套 API**，前端不感知差异。
+- Worker 密码使用 **PBKDF2（Web Crypto）**；Node 后端使用 bcryptjs。两者哈希格式不同，数据不通用。
+- Worker 文件存 **R2**，数据库只保存 R2 key；对外通过 `/media/<key>` 读取，返回 Worker 绝对地址。
+- 头像上传用 **base64 JSON**（`{ dataUrl }`），项目封面/视频用 **multipart**（`FormData`）。
+- D1/SQLite 连接需保证外键与索引；公开评论接口不返回 `email`/`user_id`。
 - 后台操作必须同时校验登录态和管理员角色。
-- 新增接口必须同步更新 `DATA_MODEL.md`。
-- 新增页面或路由必须同步更新 `ARCHITECTURE.md` 和 `DESIGN.md`。
-- AI 协作期间只使用纯文本输出，不发送图片、截图或非文本消息。
-- AI 不自动打开浏览器；需要用户查看页面时只提供文本链接。
+- 新增接口同步更新 `DATA_MODEL.md`；新增页面/路由同步更新 `ARCHITECTURE.md` 和 `DESIGN.md`。
+- AI 协作只使用纯文本输出，不发送图片/截图；不自动打开浏览器。
 
-## 6. 本地运行命令
+## 6. 本地运行命令（一键切换后端）
 
-前端：
+后端**放哪个用哪个**：有 `server/server.js` 用 Node，否则用 Worker。
 
 ```bash
-npm run dev
+npm run start      # 一键：自动检测后端 + 启动前端（Vite 代理自动指向该后端端口）
+npm run backend    # 只启动检测到的后端
+npm run dev        # 只启动前端
+npm run build      # 构建前端到 dist/
 ```
 
-API：
+首次使用 Worker 本地环境：
 
 ```bash
-cd server
-npm run dev
+cd worker && npm install
+npx wrangler d1 execute ownerweb --local --file=./schema.sql
 ```
 
-构建前端：
-
-```bash
-npm run build
-```
-
-当前没有 lint 和测试命令。验证以构建、接口手工检查和页面手工检查为主。
+强制指定后端：`$env:BACKEND="node"` 或 `$env:BACKEND="worker"`（Windows PowerShell）。
 
 本地地址：
 
 ```text
 前端：http://localhost:5173
-API：http://localhost:3001
+Worker（wrangler dev）：http://localhost:8787
+Node（server/）：http://localhost:3001
 ```
 
-注意：当前 `vite.config.js` 中 `server.open: false`，启动前端开发服务不会自动打开浏览器；如需查看页面，由用户手动打开本地地址。
-项目封面限制为 PNG、JPG 或 WebP；项目视频上传上限当前为 500MB。
+检测逻辑在 `scripts/backend.mjs`，Vite 代理在 `vite.config.js` 自动读取其端口。
+
+## 7. 部署命令
+
+```bash
+# 后端（Worker）
+cd worker
+npx wrangler d1 create ownerweb          # 首次，填 database_id
+npx wrangler r2 bucket create ownerweb-media
+npx wrangler d1 execute ownerweb --remote --file=./schema.sql
+npx wrangler secret put JWT_SECRET / ADMIN_EMAIL / ADMIN_PASSWORD / CORS_ORIGIN
+npx wrangler deploy
+```
+
+前端：推送到 GitHub → Cloudflare Pages 连仓库（Build `npm run build`，输出 `dist`，`VITE_API_BASE` = Worker 域名）。
+
+当前没有 lint 和测试命令，验证以构建、`wrangler deploy --dry-run`、接口手工检查和页面手工检查为主。

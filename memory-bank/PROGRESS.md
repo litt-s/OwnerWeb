@@ -55,13 +55,19 @@
 - 修复头像卡整体不显示的问题：上一步删除 `.portrait-media` 内的 `<img>` 后，容器失去唯一的高度来源（剩余子元素均为绝对定位），高度塌陷为 0；已为 `.portrait-media` 补充 `width: 100%` 与 `aspect-ratio: 4 / 5`，并清理失效的 `.portrait-media img` 规则；`npm run build` 验证通过，根因已记录到 `LEARNINGS.md`。
 - 硬币位置与交互升级完成：硬币下移至 `top: 48%` 并以 `translateZ(-120px)` 深入腔体（与四壁共享 `.portrait-media` 的 460px 透视，视觉中心约落在 46%），宽度调整为 78% 以补偿透视缩放；悬停区域扩大到整块头像卡，`CoinBadge` 新增 `regionRef`，按鼠标位于硬币中心左/右决定旋转方向（左区向右转、右区向左转）；新增指针拖动旋转（0.6 度/像素，指针捕获、4px 阈值区分拖动与点击），松手后缓动回正且不误触发点击快转；`npm run build` 验证通过。
 - 硬币深度感与表面 3D 化完成：硬币增加 7° 俯仰角（`rotateX(7deg)`），表面新增左上高光、右下暗部、116° 斜向反光带与内圈倒角阴影（`.coin-face::after`），不再呈现为与屏幕平行的贴片；原贴身投影移除，改为落在腔体地板的压缩投影（`.space-floor-shadow`，位于 `rotateX(-90deg)` 的地板平面内、深度 118px）；四壁渐变提亮到 0.10~0.11、淡出延至 72%，腔体轮廓更明确；鼠标移动时四壁与硬币按远近产生视差（场景 -8px、硬币 -3.5px，CSS 变量 + transform 过渡驱动）；正面 ONLINE 状态点与标签改为沿硬币内圈公转（16s/圈，标签反向旋转保持水平，reduced-motion 下停止）；`npm run build` 验证通过。
+- 个人介绍页硬币替换为 three.js 真实金属硬币：新增 `src/components/Portrait3D.jsx`（@react-three/fiber），用程序化环境贴图产生真实镜面反射、LatheGeometry 圆角倒角，交互为「悬停上半上仰/下半下俯、悬停左右持续旋转、鼠标拖拽跟随旋转、移出回正」，反光质感对齐 Hero PCB 的 PBR 材质；`CoinBadge` 的 CSS 假高光方案弃用；`npm run build` 与 `wrangler` 无关，前端构建通过。
+- 部署方案确定为 **GitHub + Cloudflare**：前端 Cloudflare Pages，后端 Cloudflare Workers + Hono + D1 + R2（全免费，R2 免出网流量费）。
+- 后端从 Node/Express/SQLite 重写为 **Cloudflare Workers + Hono + D1 + R2**，接口与前端一一对齐（30+ 接口）：新增 `worker/schema.sql`、`worker/wrangler.toml`、`worker/src/index.js`、`worker/src/password.js`（PBKDF2，规避 Workers 免费版 10ms CPU 限制）；`wrangler deploy --dry-run` 打包成功。
+- 后端模块化：`worker/src/index.js` 拆为 `src/lib/`（util、seed、auth）与 `src/routes/`（auth、profile、public、admin、media），入口统一挂载。
+- 一键切换后端：新增 `scripts/backend.mjs`（检测 `server/` 用 Node、否则用 Worker，可用 `BACKEND` 强制）与 `scripts/dev.mjs`（同时启动后端与前端）；`vite.config.js` 自动读取检测结果设置 `/api` 代理端口；`package.json` 新增 `start`、`backend` 脚本。
+- Node 后端归档：`server/` 完整复制到桌面 `OwnerWeb-backend-node/`（含 README，保留可回放），并从项目移除；同时移除失效的 CloudBase 容器文件 `Dockerfile`、`.dockerignore`。
+- 敏感信息清理与 GitHub 推送：确认无硬编码密钥、历史未提交过 `.env`；完善 `.gitignore`（忽略 `.env`、`worker/.dev.vars`、`worker/.wrangler`、`worker/node_modules` 等）；`worker/wrangler.toml` 移除管理员邮箱，改由 secret 注入；`origin` 指向 GitHub（Gitee 保留为 `gitee`），`master` 已推送。
 
 ## 进行中
 
-- 项目进入功能补强和安全加固阶段。
-- 项目内容、个人优势和站点基础内容模块已可后台维护；公网部署适配已完成，后续可按 `DEPLOY.md` 选择具体托管平台。
+- 项目进入「Cloudflare 上线」阶段：代码与配置已就绪，待用户创建 D1/R2、配置 secrets 并 `wrangler deploy`，以及创建 Pages 项目。
 - 需要统一 API 响应格式和校验规则。
-- 需要确定线上部署方案。
+- 两套后端（Worker / Node）为同一套 API 的两种实现；本地用 `npm run start` 自动切换，线上以 Worker 为准。
 
 ## 待处理
 
