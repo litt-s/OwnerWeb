@@ -6,7 +6,7 @@ export const auth = async (c, next) => {
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (!token) return c.json({ error: '未登录' }, 401);
   try {
-    const payload = await jwtVerify(token, c.env.JWT_SECRET);
+    const payload = await jwtVerify(token, c.env.JWT_SECRET, 'HS256');
     const user = await c.env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(payload.id).first();
     if (!user) return c.json({ error: '用户不存在' }, 401);
     if (user.banned) return c.json({ error: '账号已被封禁' }, 403);

@@ -62,6 +62,9 @@
 - 一键切换后端：新增 `scripts/backend.mjs`（检测 `server/` 用 Node、否则用 Worker，可用 `BACKEND` 强制）与 `scripts/dev.mjs`（同时启动后端与前端）；`vite.config.js` 自动读取检测结果设置 `/api` 代理端口；`package.json` 新增 `start`、`backend` 脚本。
 - Node 后端归档：`server/` 完整复制到桌面 `OwnerWeb-backend-node/`（含 README，保留可回放），并从项目移除；同时移除失效的 CloudBase 容器文件 `Dockerfile`、`.dockerignore`。
 - 敏感信息清理与 GitHub 推送：确认无硬编码密钥、历史未提交过 `.env`；完善 `.gitignore`（忽略 `.env`、`worker/.dev.vars`、`worker/.wrangler`、`worker/node_modules` 等）；`worker/wrangler.toml` 移除管理员邮箱，改由 secret 注入；`origin` 指向 GitHub（Gitee 保留为 `gitee`），`master` 已推送。
+- README 已重写并推送：技术栈、项目结构、本地一键开发、环境变量与密钥、GitHub + Cloudflare 部署、文档索引。
+- Cloudflare Worker 本地联调跑通：`wrangler dev`（本地模拟 D1/R2）+ `wrangler d1 execute --local --file=schema.sql` 初始化；验证通过 `/api/health`、`/api/content/site`、`/api/projects`（2 个）、`/api/strengths`（6 条）、邮箱注册、管理员登录、访客留言写入、管理员删除留言、用户列表；前端 `http://localhost:5173` 经 Vite 代理 `/api` 到 Worker 返回正常。
+- 修复 Hono v4 鉴权缺陷：`jwtVerify` 需显式传 `'HS256'`，否则所有带 token 请求统一 401（详见 `LEARNINGS.md`）。
 
 ## 进行中
 

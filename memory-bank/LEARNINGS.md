@@ -232,3 +232,21 @@ Serverless 免费版要留意 CPU 限制；密码哈希优先用运行时的原�
 以后注意：
 
 每次推送前先 `git status` 与 `.gitignore` 核对；密钥只放环境变量/secret；如历史中已提交过密钥，必须视为已泄漏并轮换。
+
+## 2026-09-11 Hono v4 的 jwt verify 必须显式指定算法
+
+现象：
+
+Worker 后端登录成功并返回 token，但所有带 token 的请求（`/api/auth/me`、留言、后台）统一返回 401「登录已失效」。
+
+原因：
+
+`hono/jwt` 从 v4 起，`verify(token, secret)` 不再提供默认算法，必须显式传 `alg`，否则抛出 `JWT verification requires "alg" option to be specified`；该异常被鉴权中间件的 `catch` 吞掉，表现为统一 401，难以定位。
+
+解决：
+
+改为 `jwtVerify(token, c.env.JWT_SECRET, 'HS256')`，与 `jwtSign(payload, secret)` 的默认 HS256 对齐。
+
+以后注意：
+
+升级依赖后要复核「catch 吞异常」的鉴权路径；中间件应区分 token 无效与其它异常并记录日志，避免把内部错误伪装成登录失效。
