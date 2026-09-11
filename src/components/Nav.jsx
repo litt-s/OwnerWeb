@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Search from './Search';
 import { useAuth } from '../context/AuthContext';
-import { ArrowUpRight } from './icons';
+import { ArrowUpRight, BrandMark } from './icons';
 
 export default function Nav() {
   const navigate = useNavigate();
@@ -26,8 +26,8 @@ export default function Nav() {
     <header className={`nav ${scrolled ? 'is-scrolled' : ''}`}>
       <div className="nav-inner">
         <Link to="/" className="nav-brand">
-          <span className="nav-mark">LH</span>
-          <span className="nav-brand-text">李浩然</span>
+          <span className="nav-mark"><BrandMark /></span>
+          <span className="nav-brand-text">Li的个人博客</span>
         </Link>
 
         <nav className="nav-links">
@@ -40,7 +40,7 @@ export default function Nav() {
           {!loading && !user && <Link to="/auth" className="nav-cta ghost">登录 / 注册</Link>}
           {!loading && user && (
             <>
-              <Link to="/profile" className="nav-cta ghost">{user.nickname || '个人主页'}</Link>
+              <Link to="/settings" className="nav-cta ghost">{user.nickname || '账号设置'}</Link>
               <button className="nav-cta ghost" onClick={onLogout} type="button">退出</button>
             </>
           )}

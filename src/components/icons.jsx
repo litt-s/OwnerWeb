@@ -4,6 +4,67 @@ export const ArrowUpRight = ({ size = 16 }) => (
   </svg>
 );
 
+export const BrandMark = () => (
+  <svg className="brand-mark" viewBox="0 0 256 256" fill="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="brandBgGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#141519" />
+        <stop offset="1" stopColor="#0a0a0a" />
+      </linearGradient>
+      <linearGradient id="brandRimGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#f5f5f7" stopOpacity="0.12" />
+        <stop offset="0.35" stopColor="#f5f5f7" stopOpacity="0" />
+      </linearGradient>
+      <radialGradient id="brandGlowGrad" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stopColor="#ff3b30" stopOpacity="0.5" />
+        <stop offset="1" stopColor="#ff3b30" stopOpacity="0" />
+      </radialGradient>
+      <filter id="brandChipShadow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="3" stdDeviation="5" floodColor="#000000" floodOpacity="0.4" />
+      </filter>
+    </defs>
+    <rect width="256" height="256" rx="56" fill="url(#brandBgGrad)" />
+    <rect width="256" height="256" rx="56" fill="url(#brandRimGrad)" />
+    <rect x="88" y="88" width="80" height="80" rx="14" fill="#101216" stroke="#f5f5f7" strokeWidth="7" filter="url(#brandChipShadow)" />
+    <rect x="105" y="105" width="46" height="46" rx="9" fill="#0b0c0f" stroke="#f5f5f7" strokeWidth="4.5" />
+    <g stroke="#f5f5f7" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
+      <path d="M128 88V56" />
+      <path d="M108 88V74L88 54" />
+      <path d="M148 88V74L168 54" />
+      <path d="M168 128H200" />
+      <path d="M168 108H182L202 88" />
+      <path d="M168 148H182L202 168" />
+      <path d="M128 168V200" />
+      <path d="M108 168V182L88 202" />
+      <path d="M148 168V182L168 202" />
+      <path d="M88 128H56" />
+      <path d="M88 108H74L54 88" />
+      <path d="M88 148H74L54 168" />
+    </g>
+    <g fill="#f5f5f7">
+      <circle cx="200" cy="128" r="6.5" />
+      <circle cx="128" cy="200" r="6.5" />
+      <circle cx="56" cy="128" r="6.5" />
+      <circle cx="88" cy="54" r="5" />
+      <circle cx="168" cy="54" r="5" />
+      <circle cx="202" cy="88" r="5" />
+      <circle cx="202" cy="168" r="5" />
+      <circle cx="168" cy="202" r="5" />
+      <circle cx="88" cy="202" r="5" />
+      <circle cx="54" cy="168" r="5" />
+      <circle cx="54" cy="88" r="5" />
+    </g>
+    <g fill="#8a1a12">
+      <circle cx="108" cy="74" r="3.5" />
+      <circle cx="148" cy="182" r="3.5" />
+    </g>
+    <circle cx="128" cy="128" r="20" fill="url(#brandGlowGrad)" />
+    <circle cx="128" cy="56" r="13" fill="url(#brandGlowGrad)" />
+    <circle cx="128" cy="56" r="6.5" fill="#ff3b30" />
+    <circle cx="128" cy="128" r="6.5" fill="#ff3b30" />
+  </svg>
+);
+
 export const ArrowDown = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 5v14M6 13l6 6 6-6" />

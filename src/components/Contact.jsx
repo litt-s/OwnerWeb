@@ -2,16 +2,17 @@ import Reveal from './Reveal';
 import ThinkingDots from './ThinkingDots';
 import ScrambleText from './ScrambleText';
 import { ArrowUpRight } from './icons';
-import { profile } from '../data/resume';
-
-const CHANNELS = [
-  { label: '邮箱', value: profile.email, href: `mailto:${profile.email}` },
-  { label: '电话', value: profile.phone, href: `tel:${profile.phoneRaw}` },
-  { label: '微信', value: profile.wechat, href: null },
-  { label: 'GitHub', value: `@${profile.github}`, href: profile.githubUrl },
-];
+import { useContent } from '../context/ContentContext';
 
 export default function Contact() {
+  const { siteContent } = useContent();
+  const { profile } = siteContent;
+  const channels = [
+    { label: '邮箱', value: profile.email, href: `mailto:${profile.email}` },
+    { label: '电话', value: profile.phone, href: `tel:${profile.phoneRaw}` },
+    { label: '微信', value: profile.wechat, href: null },
+    { label: 'GitHub', value: `@${profile.github}`, href: profile.githubUrl },
+  ];
   return (
     <section id="contact" className="contact">
       <ThinkingDots />
@@ -39,7 +40,7 @@ export default function Contact() {
 
         <Reveal delay={260}>
           <div className="contact-channels">
-            {CHANNELS.map((c) =>
+            {channels.map((c) =>
               c.href ? (
                 <a key={c.label} href={c.href} className="channel" target={c.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">
                   <span className="channel-label">{c.label}</span>

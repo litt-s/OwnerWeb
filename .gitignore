@@ -1,13 +1,20 @@
 # Dependencies
 node_modules/
 server/node_modules/
+worker/node_modules/
 
 # Build output
 dist/
+worker/.wrangler/
 
-# Local environment
+# Local environment / secrets
 .env
+.env.local
+.env.*.local
 server/.env
+worker/.dev.vars
+# 保留示例文件
+!.env.production.example
 
 # Runtime data
 server/data/
@@ -20,6 +27,3 @@ server/uploads/
 *.log
 .DS_Store
 Thumbs.db
-
-# Accidental local files
-=

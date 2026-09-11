@@ -103,3 +103,26 @@ export function ZhiyunCover() {
     </svg>
   );
 }
+
+export function GenericCover({ project }) {
+  const initials = (project.name || project.id || 'NEW').slice(0, 2).toUpperCase();
+  return (
+    <svg className="cover-svg" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice" role="img" aria-label={`${project.name}项目封面`}>
+      <rect width="1200" height="720" fill="#0d0d0d" />
+      <g stroke="#292929" strokeWidth="1" fill="none">
+        <path d="M0 90h1200M0 180h1200M0 270h1200M0 360h1200M0 450h1200M0 540h1200M0 630h1200" />
+        <path d="M120 0v720M240 0v720M360 0v720M480 0v720M600 0v720M720 0v720M840 0v720M960 0v720M1080 0v720" />
+      </g>
+      <rect x="340" y="180" width="520" height="360" rx="24" fill="#131313" stroke="#303030" strokeWidth="1.5" />
+      <text x="600" y="330" textAnchor="middle" fill="#ff3b30" fontSize="120" fontFamily="JetBrains Mono, monospace" fontWeight="700">
+        {initials}
+      </text>
+      <text x="600" y="410" textAnchor="middle" fill="#f5f5f7" fontSize="36" fontFamily="Inter, sans-serif">
+        {project.name}
+      </text>
+      <text x="600" y="450" textAnchor="middle" fill="#666666" fontSize="16" fontFamily="JetBrains Mono, monospace" letterSpacing="3">
+        PROJECT · {project.index || ''}
+      </text>
+    </svg>
+  );
+}

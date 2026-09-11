@@ -1,10 +1,12 @@
 import { lazy, Suspense } from 'react';
 import Aurora from './Aurora';
-import { hero } from '../data/resume';
+import { useContent } from '../context/ContentContext';
 
 const MCU3D = lazy(() => import('./MCU3D'));
 
 export default function Hero() {
+  const { siteContent } = useContent();
+  const { hero } = siteContent;
   return (
     <section id="top" className="hero">
       <div className="hero-media">

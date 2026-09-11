@@ -1,6 +1,6 @@
 # OwnerWeb
 
-个人的嵌入式软件工程师个人主页。项目包含首页展示、项目详情、个人优势、访客留言、账号体系、资料维护和管理后台。
+个人的嵌入式软件工程师个人博客。项目包含首页展示、项目详情、个人优势、访客留言、账号体系、账号设置和管理后台。
 
 ## 技术栈
 
@@ -54,3 +54,18 @@ npm run build
 ```
 
 构建产物在 `dist/`。`node_modules/`、`dist/`、`server/data/`、`server/uploads/` 和 `.env` 不会提交到 Git。
+
+## 公网部署
+
+API 服务需要把 `server/data/` 和 `server/uploads/` 放在服务器持久化磁盘上。生产环境建议在 `server/.env` 设置：
+
+```text
+NODE_ENV=production
+PORT=3001
+CORS_ORIGIN=https://blog.example.com
+DB_DIR=/var/lib/ownerweb/data
+UPLOAD_DIR=/var/lib/ownerweb/uploads
+JWT_SECRET=强随机密钥
+```
+
+前端静态文件托管 `dist/`，反向代理将 `/api/` 和 `/uploads/` 转发到 API 服务。Nginx 示例见 `deploy/nginx.conf.example`。API 健康检查地址为 `/api/health`。

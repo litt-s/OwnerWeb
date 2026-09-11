@@ -1,5 +1,5 @@
 import PageShell from '../components/PageShell';
-import CommentsSection from '../components/CommentsSection';
+import GuestbookComments from '../components/GuestbookComments';
 
 export default function CommentsPage() {
   return (
@@ -8,7 +8,7 @@ export default function CommentsPage() {
         <div className="eyebrow"><span>05</span><span className="head-rule" /><span>Guest Book · 访客留言</span></div>
         <h2>留下你的想法</h2>
         <p className="head-sub">留言会写入数据库，管理员可在后台管理。</p>
-        <CommentsSection topic="guestbook" />
+        <GuestbookComments />
       </div>
     </PageShell>
   );

@@ -25,7 +25,7 @@ export default function AuthPage() {
     try {
       if (mode === 'login') await login(email, password);
       else await register(email, password, nickname || email.split('@')[0]);
-      navigate('/profile');
+      navigate('/settings');
     } catch (e) {
       setErr(e.message);
     } finally {

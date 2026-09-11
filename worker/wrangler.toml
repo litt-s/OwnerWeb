@@ -1,0 +1,20 @@
+name = "ownerweb-api"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# D1 数据库：先 `wrangler d1 create ownerweb`，把返回的 database_id 填这里
+[[d1_databases]]
+binding = "DB"
+database_name = "ownerweb"
+database_id = "在此填入你的 D1 database_id"
+
+# R2 存储桶：先 `wrangler r2 bucket create ownerweb-media`
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "ownerweb-media"
+
+# 密钥（不要写进本文件）：用命令行设置
+#   wrangler secret put JWT_SECRET
+#   wrangler secret put ADMIN_EMAIL        # 管理员邮箱
+#   wrangler secret put ADMIN_PASSWORD     # 管理员初始密码
+#   wrangler secret put CORS_ORIGIN        # 前端 Pages 域名，如 https://ownerweb.pages.dev

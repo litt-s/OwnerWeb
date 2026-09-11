@@ -1,0 +1,144 @@
+# OwnerWeb 部署文档（GitHub + Cloudflare，全免费）
+
+## 架构
+
+| 层 | 技术 | Cloudflare 产品 |
+|---|---|---|
+| 前端 | React + Vite（静态） | **Pages**（连 GitHub 自动构建） |
+| 后端 | Node → **Hono**（Workers 运行时） | **Workers**（`worker/`） |
+| 数据库 | SQLite → **D1** | D1 数据库 `ownerweb` |
+| 文件 | 本地磁盘 → **R2** | R2 存储桶 `ownerweb-media`（免出网流量费） |
+
+> 代码位置：后端已从 `server/`（本地 Node+SQLite）改写为 `worker/`（Workers+Hono+D1+R2）。**本地开发仍用 `server/`**，线上用 `worker/`，接口完全一致。
+
+免费额度足够个人作品集：Workers 10 万请求/天、D1 5GB、R2 10GB 且出网免费。
+
+---
+
+## 一、部署后端（Workers + D1 + R2）
+
+### 1. 安装依赖并登录
+```bash
+cd worker
+npm install
+npx wrangler login
+```
+
+### 2. 创建 D1 与 R2
+```bash
+npx wrangler d1 create ownerweb        # 复制返回的 database_id
+npx wrangler r2 bucket create ownerweb-media
+```
+把 `database_id` 填进 `worker/wrangler.toml` 的 `[[d1_databases]]`。
+
+### 3. 初始化数据库表
+```bash
+npx wrangler d1 execute ownerweb --remote --file=./schema.sql
+```
+
+### 4. 配置密钥（不要写进代码/仓库）
+```bash
+npx wrangler secret put JWT_SECRET        # 一段足够随机的长字符串
+npx wrangler secret put ADMIN_PASSWORD    # 管理员初始密码
+npx wrangler secret put CORS_ORIGIN       # 前端 Pages 域名，如 https://ownerweb.pages.dev
+```
+
+### 5. 部署
+```bash
+npx wrangler deploy
+```
+得到 Worker 域名，例如 `https://ownerweb-api.<你的子域>.workers.dev`。
+首次访问任意 `/api/*` 时会自动建管理员并播种站点内容（项目/优势/个人介绍）。
+
+---
+
+## 二、部署前端（Cloudflare Pages）
+
+1. 复制 `.env.production.example` 为 `.env.production`，填入 Worker 域名：
+   ```
+   VITE_API_BASE=https://ownerweb-api.<你的子域>.workers.dev
+   ```
+2. 推送到 GitHub。
+3. Cloudflare 控制台 → Workers & Pages → Pages → 连接 GitHub 仓库，构建配置：
+
+   | 项 | 值 |
+   |---|---|
+   | Build command | `npm run build` |
+   | Build output directory | `dist` |
+   | 环境变量 | `NODE_VERSION=20`，`VITE_API_BASE=https://ownerweb-api.<子域>.workers.dev` |
+
+   （也可以在 Pages 里设 `VITE_API_BASE` 而不用 `.env.production`。）
+
+4. SPA 回退：仓库已含 `public/_redirects`（`/* /index.html 200`），构建后自动生效，保证刷新 `/admin`、`/projects` 不 404。
+
+---
+
+## 三、可选：同源代理（免 CORS）
+
+仓库含 `functions/api/[[path]].js`（Pages Function）。若想让前端同源请求 `/api`、免跨域：
+- 前端不设 `VITE_API_BASE`（留空，走同源 `/api`）
+- Pages 环境变量加 `API_ORIGIN = https://ownerweb-api.<子域>.workers.dev`
+
+> 头像/视频由 Worker 的 `/media/*` 提供，返回的是 Worker 绝对地址，`<img>/<video>` 跨域加载无需 CORS。
+
+---
+
+## 四、验证清单
+
+1. 打开 Pages 域名 → 首页、PCB 交互、蜂鸣器跳转留言页正常。
+2. 注册邮箱账号 → 登录 → 个人主页上传头像（写入 R2）→ 改密码。
+3. 管理员登录（`ADMIN_EMAIL` + `ADMIN_PASSWORD`）→ 后台：删除留言/评论、管理用户、管理项目/优势/站点内容、上传项目封面/视频。
+4. 刷新 `/projects`、`/admin` 不 404。
+5. 视频播放：`<video>` 指向 Worker `/media/...`，R2 出网免费。
+
+---
+
+## 五、常见问题排查
+
+| 现象 | 原因 / 解决 |
+|---|---|
+| 前端请求失败 / CORS | Worker 未设 `CORS_ORIGIN` 为 Pages 域名；或 `VITE_API_BASE` 填错 |
+| 刷新 `/admin` 404 | `public/_redirects` 未生效（确认构建输出 `dist/_redirects`） |
+| `no such table` | 未执行 `wrangler d1 execute ... --file=./schema.sql` |
+| 管理员登录不了 | 未设 `ADMIN_PASSWORD` secret，或 `ADMIN_EMAIL` 不对 |
+| 上传报错 | 未创建 R2 桶 / `wrangler.toml` 的 `r2_buckets` 未绑定 |
+| Worker 报 CPU 超限 | 免费版 CPU 10ms；PBKDF2 已用 10 万次迭代，若超限可在 `worker/src/password.js` 调低 `ITERATIONS` |
+| 图片不显示 | `/media/*` 路由或 R2 绑定问题；确认返回的是 Worker 绝对地址 |
+
+---
+
+## 六、本地开发（一键切换后端）
+
+后端**放哪个用哪个**：项目里有 `worker/` 就用 Cloudflare Worker，有 `server/` 就用 Node+SQLite（两者优先 Node）。脚本会自动检测并让前端代理指向对应端口。
+
+### 一键启动（推荐）
+```bash
+npm run start
+```
+自动：启动检测到的后端 + 启动前端，vite 代理自动指向该后端端口。
+
+### 分开启动
+```bash
+npm run backend     # 只启动检测到的后端
+npm run dev         # 只启动前端
+```
+
+### 首次使用 Worker 本地环境
+```bash
+cd worker && npm install
+npx wrangler d1 execute ownerweb --local --file=./schema.sql   # 初始化本地 D1（仅首次）
+```
+
+### 强制指定后端
+```bash
+# Windows PowerShell
+$env:BACKEND="node";   npm run start    # 强制 Node（需先有 server/）
+$env:BACKEND="worker"; npm run start    # 强制 Worker
+```
+
+### 切换后端
+- 想用 **Node + SQLite**：把桌面 `OwnerWeb-backend-node/` 复制回 `D:\OwnerWeb\server`，再 `npm run start` 即自动切换。
+- 想用 **Cloudflare Worker**：删除 `server/`（或设 `BACKEND=worker`），`npm run start`。
+- 后端改动：Worker 改 `worker/src/`，改完 `cd worker && npx wrangler deploy` 上线；Node 改 `server/`。
+
+> 检测逻辑在 `scripts/backend.mjs`，vite 代理在 `vite.config.js` 中自动读取其端口。

@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { useContent } from '../context/ContentContext';
 import Reveal from './Reveal';
 import SectionHeading from './SectionHeading';
 import { ArrowUpRight } from './icons';
-import { projects } from '../data/resume';
-import { BabyCover, ZhiyunCover } from './Covers';
+import { BabyCover, ZhiyunCover, GenericCover } from './Covers';
 
 const COVERS = {
   yuhu: BabyCover,
@@ -12,7 +12,9 @@ const COVERS = {
 
 function ProjectCard({ project, flip }) {
   const navigate = useNavigate();
-  const Cover = COVERS[project.id];
+  const LegacyCover = COVERS[project.id];
+  const Cover = project.cover ? null : LegacyCover || GenericCover;
+
   return (
     <Reveal
       className={`proj-card ${flip ? 'is-flip' : ''} is-clickable`}
@@ -23,7 +25,11 @@ function ProjectCard({ project, flip }) {
     >
       <div className="proj-media">
         <div className="proj-media-frame">
-          <Cover />
+          {project.cover ? (
+            <img className="cover-img" src={project.cover} alt={`${project.name}项目封面`} />
+          ) : (
+            <Cover project={project} />
+          )}
         </div>
         <span className="proj-index">{project.index}</span>
       </div>
@@ -60,6 +66,8 @@ function ProjectCard({ project, flip }) {
 }
 
 export default function Projects() {
+  const { projects } = useContent();
+
   return (
     <section id="projects" className="section proj">
       <div className="container">

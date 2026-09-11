@@ -2,29 +2,98 @@
 
 ## 1. 数据范围
 
-静态数据：
+静态兜底数据：
 
 - 个人基础信息
 - Hero 文案
 - 经历与统计
-- 项目列表和项目详情
-- 个人优势
 
 数据库保存：
 
 - 用户账号
 - 用户资料
 - 用户头像 URL
-- 留言与回复
+- 访客留言与回复
+- 项目多级评论
+- 项目内容
+- 个人优势内容
+- Hero、个人身份、联系信息和经历内容
 
 文件系统保存：
 
 - 用户上传头像
+- 项目上传视频和封面
 - SQLite 数据库文件
 
-## 2. 静态项目数据
+## 2. projects 表
 
-项目数据放在 `src/data/resume.js`。
+SQLite 表名：
+
+```text
+projects
+```
+
+字段：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `id` | TEXT PK | 稳定项目 ID，用于路由和评论关联 |
+| `sort_order` | INTEGER | 排序值，不小于 1 |
+| `name` | TEXT | 项目名称 |
+| `en` | TEXT | 英文标题 |
+| `tagline` | TEXT | 一句话定位 |
+| `desc` | TEXT | 卡片简介 |
+| `long_desc` | TEXT | 详情页长介绍 |
+| `video` | TEXT | 演示视频 URL，可为空 |
+| `cover` | TEXT | 上传封面 URL，可为空 |
+| `link` | TEXT | 外部仓库地址，可为空 |
+| `link_label` | TEXT | 外部链接显示文字 |
+| `tech_json` | TEXT | 技术标签数组 JSON |
+| `points_json` | TEXT | 核心实现数组 JSON |
+| `created_at` | TEXT | 创建时间 |
+| `updated_at` | TEXT | 更新时间 |
+
+序列化字段：
+
+```js
+{
+  id,
+  sort_order,
+  index,
+  name,
+  en,
+  tagline,
+  desc,
+  longDesc,
+  video,
+  cover,
+  link,
+  linkLabel,
+  tech,
+  points
+}
+```
+
+`index` 不落库，由后端根据 `sort_order` 格式化为 `01`、`02`。
+
+约束与校验：
+
+- `id` 必填且唯一，只能使用小写字母、数字和短横线，最长 80 字符。
+- `name` 必填，最长 100 字符。
+- `sort_order` 必须是不小于 1 的整数。
+- `tech` 和 `points` 接受数组或换行分隔文本，保存前去除空白项。
+- `video` 和 `cover` 可为空；上传后保存 `/uploads/projects/...` 路径。
+- 公开接口返回上述序列化字段，不返回时间戳。
+
+初始化与兜底：
+
+- `projects` 表为空时，`server/db.js` 使用 `src/data/resume.js` 中的项目初始化。
+- 前端 `ContentContext` 先保留 `resume.js` 作为静态兜底，公开接口成功后使用数据库数据。
+- 老项目 `yuhu` 和 `zhiyun` 在未上传封面时继续使用前端 SVG 封面。
+
+## 2.1 静态兜底数据
+
+`src/data/resume.js` 仍保存个人基础信息、Hero、经历、优势和项目兜底数据。项目对象的关键字段：
 
 当前项目对象的关键字段：
 
@@ -48,11 +117,115 @@
 要求：
 
 - 每个项目必须有稳定 `id`。
-- 留言通过 `topic = project.id` 关联项目。
-- 通用留言使用 `topic = 'guestbook'`。
-- 项目视频文件放在 `public/videos/`。
+- 数据库项目评论通过 `project_id = projects.id` 关联项目。
+- 访客留言独立保存在 `guestbook_comments`，不再使用 `topic` 混存。
+- 初始化项目的视频路径仍可指向 `public/videos/`；后台上传的视频保存在 `server/uploads/projects/videos/`。
 
-## 3. users 表
+## 3. strengths 表
+
+SQLite 表名：
+
+```text
+strengths
+```
+
+字段：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `id` | INTEGER PK | 自增优势 ID |
+| `sort_order` | INTEGER | 排序值，不小于 1 |
+| `title` | TEXT | 优势标题 |
+| `description` | TEXT | 优势描述 |
+| `created_at` | TEXT | 创建时间 |
+| `updated_at` | TEXT | 更新时间 |
+
+序列化字段：
+
+```js
+{
+  id,
+  sort_order,
+  n,
+  title,
+  desc
+}
+```
+
+`n` 不落库，由后端根据 `sort_order` 格式化，用于前端编号展示。
+
+约束与校验：
+
+- `title` 必填，最长 100 字符。
+- `description` 必填，最长 500 字符。
+- `sort_order` 必须是不小于 1 的整数。
+- 公开接口按 `sort_order` 升序返回。
+
+初始化与兜底：
+
+- `strengths` 表为空时，`server/db.js` 使用 `src/data/resume.js` 中的优势初始化。
+- 前端 `ContentContext` 保留 `resume.js` 优势作为静态兜底，公开接口成功后使用数据库数据。
+
+## 4. site_content 表
+
+SQLite 表名：
+
+```text
+site_content
+```
+
+`site_content` 是单行配置表，`id` 固定为 `1`。三段 JSON 分别保存站点基础内容：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `profile_json` | TEXT | 个人身份、联系信息、教育背景和专业认证 |
+| `hero_json` | TEXT | 首页 Hero 文案 |
+| `experience_json` | TEXT | 经历简介和经历统计 |
+| `updated_at` | TEXT | 更新时间 |
+
+序列化字段：
+
+```js
+{
+  content: {
+    profile: {
+      name,
+      nameEn,
+      role,
+      roleEn,
+      age,
+      degree,
+      location,
+      phone,
+      phoneRaw,
+      email,
+      github,
+      githubUrl,
+      wechat,
+      focus,
+      certificate,
+      education: { school, major, period }
+    },
+    hero: { eyebrow, statement, headFirst, headSecond, sub },
+    experience: { intro, stats: [{ value, label, sub }] }
+  }
+}
+```
+
+约束与校验：
+
+- `name`、`role`、`email`、`phone`、`phoneRaw` 必填。
+- `email` 必须符合邮箱格式。
+- `headFirst`、`headSecond`、`sub`、`intro` 必填。
+- `stats` 最多 12 条，每条的 `value` 和 `label` 必填。
+- 公开接口返回完整展示内容，不包含密码等账号敏感字段。
+
+初始化与兜底：
+
+- 表为空时，`server/db.js` 使用 `resume.js` 的个人基础信息、Hero 和经历初始化。
+- 前端 `ContentContext` 使用 `resume.js` 作为异常兜底，公开接口成功后合并并使用数据库数据。
+
+## 5. users 表
 
 SQLite 表名：
 
@@ -69,7 +242,7 @@ users
 | `password_hash` | TEXT | bcrypt 哈希 |
 | `nickname` | TEXT | 昵称，可为空 |
 | `avatar` | TEXT | 头像 URL，可为空 |
-| `bio` | TEXT | 个性签名，可为空 |
+| `bio` | TEXT | 历史兼容字段，账号设置不再展示或更新，可为空 |
 | `role` | TEXT | `user` 或 `admin`，默认 `user` |
 | `banned` | INTEGER | `0` 正常，`1` 封禁 |
 | `created_at` | TEXT | 注册时间 |
@@ -82,19 +255,18 @@ users
   email,
   nickname,
   avatar,
-  bio,
   role,
   banned,
   created_at
 }
 ```
 
-## 4. comments 表
+## 6. guestbook_comments 表
 
 SQLite 表名：
 
 ```text
-comments
+guestbook_comments
 ```
 
 字段：
@@ -104,20 +276,64 @@ comments
 | `id` | INTEGER PK | 自增评论 ID |
 | `nickname` | TEXT | 提交时的昵称快照 |
 | `email` | TEXT | 提交时的邮箱快照 |
-| `content` | TEXT | 留言内容 |
-| `user_id` | INTEGER | 提交用户 ID |
-| `parent_id` | INTEGER | 回复的顶层留言 ID，可为空 |
-| `topic` | TEXT | `guestbook` 或项目 ID，可为空 |
+| `content` | TEXT | 访客留言或回复内容 |
+| `user_id` | INTEGER | 提交用户 ID，删除用户时置空 |
+| `parent_id` | INTEGER | 被回复的留言 ID，可为空 |
+| `root_id` | INTEGER | 该留言所属顶层留言 ID，顶层留言为自己的 ID |
 | `created_at` | TEXT | 创建时间 |
 
-当前逻辑说明：
+约束与索引：
 
-- 顶层留言 `parent_id` 为空。
-- 回复通过 `parent_id` 关联顶层留言。
-- 前端按 `topic` 过滤展示。
-- `GET /api/comments` 当前返回全部评论。
+- `user_id` 外键指向 `users.id`，策略为 `ON DELETE SET NULL`。
+- `parent_id` 外键指向本表 `id`，策略为 `ON DELETE CASCADE`。
+- `root_id` 外键指向本表 `id`，策略为 `ON DELETE CASCADE`。
+- `parent_id` 与 `root_id` 均已建立索引。
+- 昵称和邮箱保留提交时快照，用户被删除后留言仍可展示。
+- 新增留言或回复时，后端会自动写入 `root_id`；历史数据在启动时自动回填。
 
-## 5. 当前校验规则
+## 7. project_comments 表
+
+SQLite 表名：
+
+```text
+project_comments
+```
+
+字段：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `id` | INTEGER PK | 自增评论 ID |
+| `project_id` | TEXT | 项目 ID，对应 `projects.id` |
+| `nickname` | TEXT | 提交时的昵称快照 |
+| `email` | TEXT | 提交时的邮箱快照 |
+| `content` | TEXT | 项目评论或回复内容 |
+| `user_id` | INTEGER | 提交用户 ID，删除用户时置空 |
+| `parent_id` | INTEGER | 被回复的评论 ID，可为空 |
+| `root_id` | INTEGER | 该评论所属顶层评论 ID，顶层评论为自己的 ID |
+| `created_at` | TEXT | 创建时间 |
+
+约束与索引：
+
+- `project_id` 必填，接口会校验它必须存在于 `projects` 表。
+- `user_id` 外键指向 `users.id`，策略为 `ON DELETE SET NULL`。
+- `parent_id` 外键指向本表 `id`，策略为 `ON DELETE CASCADE`。
+- `root_id` 外键指向本表 `id`，策略为 `ON DELETE CASCADE`。
+- `project_id`、`parent_id`、`root_id` 均已建立索引。
+- 任意层级回复通过 `parent_id` 递归关联，前端按评论树渲染。
+- 新增评论或回复时，后端会继承父评论所在线程的 `root_id`；历史数据在启动时自动回填。
+
+## 8. 旧表迁移逻辑
+
+首次导入 `server/db.js` 时，如果存在旧版 `comments` 表，会在同一个事务中执行：
+
+1. 按 `topic` 把旧数据拆分复制到 `guestbook_comments` 和 `project_comments`。
+2. 复制成功后删除旧 `comments` 表。
+3. 同时清理已存在的 `comments_legacy` 备份表。
+
+当前数据库不保留旧评论表。
+
+## 9. 当前校验规则
 
 注册：
 
@@ -136,33 +352,81 @@ comments
 - 原密码必须正确。
 - 新密码至少 6 位。
 
-留言：
+访客留言和项目评论：
 
 - 必须登录。
 - `content` 去除首尾空白后不能为空。
+- `content` 最大 500 字。
 - 昵称取用户昵称或邮箱前缀。
+- 项目评论的 `project_id` 来自路由，必须对应存在的项目。
+- `parent_id` 必须指向同表、同项目下存在的评论。
+- 公开评论接口只返回 `id`、`nickname`、`avatar`、`content`、`parent_id`、`root_id`、`created_at`。
+- `avatar` 通过 `LEFT JOIN users` 读取用户当前头像，不把评论邮箱或 `user_id` 暴露给公开接口；用户上传新头像后，已有评论头像会同步变化。
+
+项目内容：
+
+- 新增和修改项目必须管理员登录。
+- `id` 必填，新增时不能重复，格式为小写字母、数字或短横线，最长 80 字符。
+- `name` 必填，最长 100 字符。
+- `sort_order` 必须是不小于 1 的整数。
+- `tech` 和 `points` 保存为 JSON 数组。
+- 封面只接受 PNG、JPG 或 WebP，上传上限 2MB 的通用头像限制不适用于项目封面，当前项目媒体上限为 500MB。
+- 视频必须使用视频 MIME 类型，上传后数据库只保存 `/uploads/projects/videos/...` URL。
+- 删除项目会同时删除该项目全部评论。
+
+个人优势：
+
+- 新增和修改优势必须管理员登录。
+- `title` 必填，最长 100 字符。
+- `description` 必填，最长 500 字符。
+- `sort_order` 必须是不小于 1 的整数。
+
+站点内容：
+
+- 修改 Hero、身份联系信息和经历内容必须管理员登录。
+- 姓名、职业定位、邮箱、电话、主标题和经历简介必填。
+- 邮箱格式、各类文本长度和经历统计条数由后端校验。
 
 待补强：
 
-- 留言内容缺少最大长度限制。
-- `topic` 未校验是否为合法项目 ID 或 `guestbook`。
-- `parent_id` 未校验目标留言是否存在。
-- 删除用户时留言未级联处理。
-- `GET /api/comments` 当前会带出 `email` 和 `user_id`，应改为公开安全字段。
+- 删除父评论时当前会连同整棵子树一起删除，后续可考虑改为保留子回复并提升层级。
+- 管理端评论列表仍返回 `email` 和 `user_id`，属于管理员可见字段。
+- 尚未实现按 `root_id` 加载整棵线程和顶层评论分页懒加载。
 
-## 6. API 清单
+## 10. API 清单
 
 | 方法 | 路径 | 用途 | 鉴权 |
 |---|---|---|---|
 | POST | `/api/auth/register` | 邮箱注册，返回 token 和用户 | 否 |
 | POST | `/api/auth/login` | 邮箱登录，返回 token 和用户 | 否 |
 | GET | `/api/auth/me` | 恢复登录态 | 是 |
-| PUT | `/api/profile` | 修改昵称和个性签名 | 是 |
+| PUT | `/api/profile` | 修改昵称 | 是 |
 | POST | `/api/profile/avatar` | 上传头像，multipart 字段名 `avatar` | 是 |
 | PUT | `/api/profile/password` | 修改密码 | 是 |
-| GET | `/api/comments` | 获取全部评论 | 否 |
-| POST | `/api/comments` | 提交评论或回复 | 是 |
-| DELETE | `/api/admin/comments/:id` | 删除评论 | 管理员 |
+| GET | `/api/strengths` | 获取个人优势列表 | 否 |
+| GET | `/api/content/site` | 获取 Hero、身份联系信息和经历内容 | 否 |
+| GET | `/api/health` | 检查 API 与 SQLite 数据库状态 | 否 |
+| GET | `/api/guestbook-comments` | 获取访客留言树列表 | 否 |
+| POST | `/api/guestbook-comments` | 提交访客留言或回复 | 是 |
+| GET | `/api/projects` | 获取项目列表 | 否 |
+| GET | `/api/projects/:projectId` | 获取项目详情 | 否 |
+| GET | `/api/projects/:projectId/comments` | 获取指定项目的多级评论 | 否 |
+| POST | `/api/projects/:projectId/comments` | 提交项目评论或任意层级回复 | 是 |
+| GET | `/api/admin/comments` | 获取访客留言和项目评论管理列表 | 管理员 |
+| DELETE | `/api/admin/guestbook-comments/:id` | 删除访客留言及其回复 | 管理员 |
+| DELETE | `/api/admin/project-comments/:id` | 删除项目评论及其回复 | 管理员 |
+| GET | `/api/admin/projects` | 获取项目管理列表 | 管理员 |
+| POST | `/api/admin/projects` | 新增项目 | 管理员 |
+| PUT | `/api/admin/projects/:id` | 修改项目 | 管理员 |
+| DELETE | `/api/admin/projects/:id` | 删除项目及其评论 | 管理员 |
+| POST | `/api/admin/projects/:id/cover` | 上传或替换项目封面，multipart 字段名 `cover` | 管理员 |
+| POST | `/api/admin/projects/:id/video` | 上传或替换项目视频，multipart 字段名 `video` | 管理员 |
+| GET | `/api/admin/strengths` | 获取优势管理列表 | 管理员 |
+| POST | `/api/admin/strengths` | 新增优势 | 管理员 |
+| PUT | `/api/admin/strengths/:id` | 修改优势 | 管理员 |
+| DELETE | `/api/admin/strengths/:id` | 删除优势 | 管理员 |
+| GET | `/api/admin/content/site` | 获取站点内容管理数据 | 管理员 |
+| PUT | `/api/admin/content/site` | 修改 Hero、身份联系信息和经历内容 | 管理员 |
 | GET | `/api/admin/users` | 获取用户列表 | 管理员 |
 | PATCH | `/api/admin/users/:id` | 修改用户角色或封禁状态 | 管理员 |
 | DELETE | `/api/admin/users/:id` | 删除用户 | 管理员 |
@@ -173,7 +437,7 @@ comments
 - 失败返回 `{ error: string }`。
 - 前端 `src/api.js` 优先读取 `data.error` 作为错误提示。
 
-## 7. 管理员鉴权
+## 11. 管理员鉴权
 
 - 密码使用 bcryptjs 哈希后保存。
 - API 启动时必须配置 `JWT_SECRET`，缺失时直接退出。

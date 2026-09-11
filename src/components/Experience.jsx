@@ -1,17 +1,42 @@
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import Reveal from './Reveal';
 import SectionHeading from './SectionHeading';
 import { PhoneIcon, MailIcon, GitHubIcon, WeChatIcon, PinIcon } from './icons';
-import { profile, experience } from '../data/resume';
+import { useContent } from '../context/ContentContext';
 
-const CONTACTS = [
-  { icon: PhoneIcon, label: '电话', value: profile.phone, href: `tel:${profile.phoneRaw}` },
-  { icon: MailIcon, label: '邮箱', value: profile.email, href: `mailto:${profile.email}` },
-  { icon: WeChatIcon, label: '微信', value: profile.wechat, href: null },
-  { icon: GitHubIcon, label: 'GitHub', value: `@${profile.github}`, href: profile.githubUrl },
-  { icon: PinIcon, label: '所在地', value: profile.location, href: null },
-];
+const Portrait3D = lazy(() => import('./Portrait3D'));
 
 export default function Experience() {
+  const { siteContent } = useContent();
+  const { profile, experience } = siteContent;
+  const mediaRef = useRef(null);
+
+  useEffect(() => {
+    const el = mediaRef.current;
+    if (!el) return undefined;
+    const onMove = (e) => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty('--par-x', (((e.clientX - r.left) / r.width - 0.5) * 2).toFixed(3));
+      el.style.setProperty('--par-y', (((e.clientY - r.top) / r.height - 0.5) * 2).toFixed(3));
+    };
+    const onLeave = () => {
+      el.style.setProperty('--par-x', '0');
+      el.style.setProperty('--par-y', '0');
+    };
+    el.addEventListener('mousemove', onMove);
+    el.addEventListener('mouseleave', onLeave);
+    return () => {
+      el.removeEventListener('mousemove', onMove);
+      el.removeEventListener('mouseleave', onLeave);
+    };
+  }, []);
+  const contacts = [
+    { icon: PhoneIcon, label: '电话', value: profile.phone, href: `tel:${profile.phoneRaw}` },
+    { icon: MailIcon, label: '邮箱', value: profile.email, href: `mailto:${profile.email}` },
+    { icon: WeChatIcon, label: '微信', value: profile.wechat, href: null },
+    { icon: GitHubIcon, label: 'GitHub', value: `@${profile.github}`, href: profile.githubUrl },
+    { icon: PinIcon, label: '所在地', value: profile.location, href: null },
+  ];
   return (
     <section id="experience" className="section exp">
       <div className="container">
@@ -25,8 +50,20 @@ export default function Experience() {
         <div className="exp-grid">
           <Reveal className="exp-left">
             <div className="portrait-card">
-              <div className="portrait-media">
-                <img src="/portrait.svg" alt={profile.name} />
+              <div className="portrait-media" ref={mediaRef}>
+                <div className="portrait-space" aria-hidden="true">
+                  <span className="space-back" />
+                  <span className="space-glow" />
+                  <span className="space-wall space-wall-ceiling" />
+                  <span className="space-wall space-wall-floor">
+                    <span className="space-floor-shadow" />
+                  </span>
+                  <span className="space-wall space-wall-left" />
+                  <span className="space-wall space-wall-right" />
+                </div>
+                <Suspense fallback={null}>
+                  <Portrait3D />
+                </Suspense>
               </div>
               <div className="portrait-meta">
                 <span className="portrait-name">{profile.name}</span>
@@ -49,12 +86,12 @@ export default function Experience() {
               </div>
               <div className="exp-cert">
                 <span className="meta-label">专业认证</span>
-                <span className="meta-value">华为 HCIP 设备高级开发工程师</span>
+                <span className="meta-value">{profile.certificate}</span>
               </div>
             </div>
 
             <ul className="contact-list">
-              {CONTACTS.map((c) => (
+              {contacts.map((c) => (
                 <li key={c.label}>
                   <span className="cl-icon">
                     <c.icon />

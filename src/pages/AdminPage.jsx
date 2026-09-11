@@ -2,24 +2,41 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import PageShell from '../components/PageShell';
 import { api } from '../api';
+import AdminProjects from '../components/admin/AdminProjects';
+import AdminStrengths from '../components/admin/AdminStrengths';
+import AdminSiteContent from '../components/admin/AdminSiteContent';
 
 export default function AdminPage() {
   const { user, token } = useAuth();
   const [tab, setTab] = useState('comments');
   const [comments, setComments] = useState([]);
   const [users, setUsers] = useState([]);
+  const [projectsActive, setProjectsActive] = useState(false);
+  const [strengthsActive, setStrengthsActive] = useState(false);
+  const [contentActive, setContentActive] = useState(false);
   const [err, setErr] = useState('');
 
-  const loadComments = () => api('/api/comments', { token }).then((d) => setComments(d.comments)).catch((e) => setErr(e.message));
+  const loadComments = () => api('/api/admin/comments', { token }).then((d) => setComments(d.comments)).catch((e) => setErr(e.message));
   const loadUsers = () => api('/api/admin/users', { token }).then((d) => setUsers(d.users)).catch((e) => setErr(e.message));
 
   useEffect(() => {
     setErr('');
     if (tab === 'comments') loadComments();
-    else loadUsers();
+    else if (tab === 'users') loadUsers();
+    else if (tab === 'projects') setProjectsActive(true);
+    else if (tab === 'strengths') setStrengthsActive(true);
+    else if (tab === 'content') setContentActive(true);
   }, [tab]);
 
-  const delComment = async (id) => { try { await api(`/api/admin/comments/${id}`, { method: 'DELETE', token }); loadComments(); } catch (e) { setErr(e.message); } };
+  const delComment = async (comment) => {
+    const endpoint = comment.scope === 'project'
+      ? `/api/admin/project-comments/${comment.id}`
+      : `/api/admin/guestbook-comments/${comment.id}`;
+    try {
+      await api(endpoint, { method: 'DELETE', token });
+      loadComments();
+    } catch (e) { setErr(e.message); }
+  };
   const setUser = async (id, body) => { try { await api(`/api/admin/users/${id}`, { method: 'PATCH', body, token }); loadUsers(); } catch (e) { setErr(e.message); } };
   const delUser = async (id) => { try { await api(`/api/admin/users/${id}`, { method: 'DELETE', token }); loadUsers(); } catch (e) { setErr(e.message); } };
 
@@ -36,22 +53,26 @@ export default function AdminPage() {
   return (
     <PageShell title="管理后台">
       <div className="container">
-        <div className="tabs" style={{ maxWidth: 300 }}>
+        <div className="tabs" style={{ maxWidth: 1080 }}>
+          <button type="button" className={tab === 'content' ? 'on' : ''} onClick={() => setTab('content')}>内容管理</button>
           <button type="button" className={tab === 'comments' ? 'on' : ''} onClick={() => setTab('comments')}>评论管理</button>
+          <button type="button" className={tab === 'projects' ? 'on' : ''} onClick={() => setTab('projects')}>项目管理</button>
+          <button type="button" className={tab === 'strengths' ? 'on' : ''} onClick={() => setTab('strengths')}>优势管理</button>
           <button type="button" className={tab === 'users' ? 'on' : ''} onClick={() => setTab('users')}>用户管理</button>
         </div>
         {err && <p className="form-err">{err}</p>}
 
         {tab === 'comments' && (
           <div className="admin-table">
-            <div className="row head"><span>昵称</span><span>时间</span><span>内容</span><span>操作</span></div>
-            {comments.length === 0 && <div className="row"><span colSpan={4}>暂无评论</span></div>}
+            <div className="row head"><span>位置</span><span>昵称</span><span>时间</span><span>内容</span><span>操作</span></div>
+            {comments.length === 0 && <div className="row"><span colSpan={5}>暂无评论</span></div>}
             {comments.map((c) => (
-              <div className="row" key={c.id}>
+              <div className="row" key={`${c.scope}-${c.id}`}>
+                <span>{c.location}</span>
                 <span>{c.nickname}</span>
                 <span>{c.created_at}</span>
                 <span>{c.content}</span>
-                <button className="del" onClick={() => delComment(c.id)}>删除</button>
+                <button className="del" onClick={() => delComment(c)}>删除</button>
               </div>
             ))}
           </div>
@@ -76,6 +97,10 @@ export default function AdminPage() {
             ))}
           </div>
         )}
+
+        {tab === 'projects' && projectsActive && <AdminProjects token={token} />}
+        {tab === 'strengths' && strengthsActive && <AdminStrengths token={token} />}
+        {tab === 'content' && contentActive && <AdminSiteContent token={token} />}
       </div>
     </PageShell>
   );

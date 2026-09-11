@@ -1,11 +1,20 @@
 import { useParams, Link } from 'react-router-dom';
-import { projects } from '../data/resume';
+import { useContent } from '../context/ContentContext';
 import PageShell from '../components/PageShell';
-import CommentsSection from '../components/CommentsSection';
+import ProjectComments from '../components/ProjectComments';
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
+  const { projects, projectsLoading } = useContent();
   const project = projects.find((p) => p.id === id);
+
+  if (!project && projectsLoading) {
+    return (
+      <PageShell title="项目详情">
+        <p className="form-err" style={{ padding: '40px' }}>正在加载项目…</p>
+      </PageShell>
+    );
+  }
 
   if (!project) {
     return (
@@ -27,13 +36,18 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        <div className="proj-video">
-          <video controls poster="" preload="metadata">
-            <source src={project.video} type="video/mp4" />
-            您的浏览器不支持视频播放。
-          </video>
-          <div className="video-note">演示视频占位：把 mp4 放到 public{project.video} 即可播放</div>
-        </div>
+        {project.video ? (
+          <div className="proj-video">
+            <video controls poster={project.cover || ''} preload="metadata">
+              <source src={project.video} />
+              您的浏览器不支持视频播放。
+            </video>
+          </div>
+        ) : (
+          <div className="proj-video no-video">
+            <p>该项目还没有上传演示视频</p>
+          </div>
+        )}
 
         <div className="proj-detail-body">
           <h3>项目介绍</h3>
@@ -44,14 +58,16 @@ export default function ProjectDetailPage() {
             {project.points.map((p) => <li key={p}>{p}</li>)}
           </ul>
 
-          <a className="proj-link" href={`https://${project.link}`} target="_blank" rel="noreferrer">
-            {project.linkLabel} ↗
-          </a>
+          {project.link && (
+            <a className="proj-link" href={`https://${project.link}`} target="_blank" rel="noreferrer">
+              {project.linkLabel || project.link} ↗
+            </a>
+          )}
         </div>
 
         <div className="proj-comments">
           <h3>项目留言</h3>
-          <CommentsSection topic={project.id} />
+          <ProjectComments projectId={project.id} />
         </div>
 
         <Link to="/projects" className="back" style={{ display: 'inline-block' }}>← 返回精选项目</Link>

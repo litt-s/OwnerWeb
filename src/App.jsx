@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ContentProvider } from './context/ContentContext';
 import Nav from './components/Nav';
 import Hero from './components/Hero';
 import Contact from './components/Contact';
@@ -38,19 +39,22 @@ function Home() {
 export default function App() {
   return (
     <AuthProvider>
-      <Nav />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/experience" element={<PageShell title="个人经历"><Experience /></PageShell>} />
-        <Route path="/projects" element={<PageShell title="精选项目"><Projects /></PageShell>} />
-        <Route path="/projects/:id" element={<ProjectDetailPage />} />
-        <Route path="/strengths" element={<PageShell title="个人优势"><Strengths /></PageShell>} />
-        <Route path="/comments" element={<CommentsPage />} />
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="*" element={<Home />} />
-      </Routes>
+      <ContentProvider>
+        <Nav />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/experience" element={<PageShell title="个人经历"><Experience /></PageShell>} />
+          <Route path="/projects" element={<PageShell title="精选项目"><Projects /></PageShell>} />
+          <Route path="/projects/:id" element={<ProjectDetailPage />} />
+          <Route path="/strengths" element={<PageShell title="个人优势"><Strengths /></PageShell>} />
+          <Route path="/comments" element={<CommentsPage />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/settings" element={<ProfilePage />} />
+          <Route path="/profile" element={<Navigate to="/settings" replace />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </ContentProvider>
     </AuthProvider>
   );
 }

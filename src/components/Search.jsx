@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { profile, projects, strengths } from '../data/resume';
+import { useContent } from '../context/ContentContext';
 
 const SearchIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -15,10 +15,11 @@ const ArrowUpRight = () => (
   </svg>
 );
 
-const buildIndex = () => {
+const buildIndex = (profile, projects, strengths) => {
+  const safeProfile = profile || {};
   const index = [
-    { label: profile.name, sub: profile.role, to: '/experience' },
-    { label: profile.role, sub: profile.nameEn, to: '/experience' },
+    { label: safeProfile.name || '', sub: safeProfile.role || '', to: '/experience' },
+    { label: safeProfile.role || '', sub: safeProfile.nameEn || '', to: '/experience' },
     { label: '个人经历', sub: 'About', to: '/experience' },
     { label: '精选项目', sub: 'Projects', to: '/projects' },
     { label: '个人优势', sub: 'Capabilities', to: '/strengths' },
@@ -26,24 +27,32 @@ const buildIndex = () => {
   ];
   projects.forEach((p) => {
     index.push({ label: p.name, sub: p.tagline, to: '/projects' });
-    p.tech.forEach((t) => index.push({ label: t, sub: p.name, to: '/projects' }));
+    (p.tech || []).forEach((t) => index.push({ label: t, sub: p.name, to: '/projects' }));
   });
-  strengths.forEach((s) => index.push({ label: s.title, sub: s.desc.slice(0, 42) + '…', to: '/strengths' }));
+  strengths.forEach((s) => {
+    const description = s.desc || '';
+    index.push({ label: s.title || '', sub: description.slice(0, 42) + '…', to: '/strengths' });
+  });
   return index;
 };
 
-const INDEX = buildIndex();
-
 export default function Search() {
   const navigate = useNavigate();
+  const content = useContent() || {};
+  const { projects = [], strengths = [] } = content;
+  const profile = content.siteContent?.profile || {};
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
 
+  const index = useMemo(
+    () => buildIndex(profile, projects, strengths),
+    [profile, projects, strengths]
+  );
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return INDEX.filter((item) => item.label.toLowerCase().includes(q) || item.sub.toLowerCase().includes(q)).slice(0, 7);
-  }, [query]);
+    return index.filter((item) => item.label.toLowerCase().includes(q) || item.sub.toLowerCase().includes(q)).slice(0, 7);
+  }, [index, query]);
 
   const select = (item) => {
     if (item.to === '/' && item.anchor) navigate('/', { state: { scrollTo: item.anchor } });
