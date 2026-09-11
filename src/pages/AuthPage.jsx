@@ -4,6 +4,23 @@ import { useAuth } from '../context/AuthContext';
 import PageShell from '../components/PageShell';
 import { EyeIcon, EyeOffIcon } from '../components/icons';
 
+const EMAIL_RE =
+  /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
+
+function checkEmailFormat(raw) {
+  const email = String(raw || '').trim().toLowerCase();
+  if (!email) return '请输入邮箱';
+  const at = email.lastIndexOf('@');
+  if (at <= 0 || at === email.length - 1) return '邮箱格式不正确';
+  const local = email.slice(0, at);
+  if (local.length > 64 || local.startsWith('.') || local.endsWith('.') || local.includes('..')) {
+    return '邮箱格式不正确';
+  }
+  if (!EMAIL_RE.test(email)) return '邮箱格式不正确';
+  if (!/^[a-z]{2,}$/.test(email.split('.').pop())) return '邮箱格式不正确';
+  return '';
+}
+
 export default function AuthPage() {
   const { login, register } = useAuth();
   const navigate = useNavigate();
@@ -20,7 +37,11 @@ export default function AuthPage() {
   const submit = async (e) => {
     e.preventDefault();
     setErr('');
-    if (mode === 'register' && password !== confirm) return setErr('两次密码不一致');
+    if (mode === 'register') {
+      const emailErr = checkEmailFormat(email);
+      if (emailErr) return setErr(emailErr);
+      if (password !== confirm) return setErr('两次密码不一致');
+    }
     setBusy(true);
     try {
       if (mode === 'login') await login(email, password);

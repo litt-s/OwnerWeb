@@ -83,6 +83,8 @@
 - 导航栏品牌区（图标 + 标题）点击返回首页：原来 `Link to="/"` 在已处于首页（已滚动）时不会回到顶部，改为携带 `state={{ scrollTo: '#top' }}`，复用 `Home` 的滚动逻辑，无论从其它页面还是首页内点击都能回到首页顶部。
 - 手机端性能优化（`3.31`）：新增 `src/hooks/useRenderActive.js`（IntersectionObserver + visibilitychange，元素离屏或页面后台时把 `frameloop` 置为 `never` 暂停渲染）；Hero PCB（`MCU3D`）与个人介绍硬币（`Portrait3D`）在移动端把 DPR 上限降到 1.5、关闭抗锯齿，硬币几何分段 96→48；导航栏毛玻璃在窄屏（≤820px）模糊从 18px 降到 10px。
 
+- 注册邮箱校验加强（`3.32`）：新增 `worker/src/lib/email.js` —— 严格格式校验（长度/本地部分/点规则/TLD）、常见拼写错误域名提示（`gmail.con` 等）、一次性邮箱域名黑名单、Cloudflare DNS-over-HTTPS 域名 MX 校验（无 MX 且无 A 兜底则拒绝；DNS 异常放行）；注册接口接入，登录邮箱做小写规范化；前端 `AuthPage` 增加即时格式校验。注意：本地网络无法访问外部 DoH，MX 校验需在线上验证。
+
 ## 进行中
 
 - 项目进入「Cloudflare 上线」阶段：代码与配置已就绪，待用户创建 D1/KV、配置 secrets 并 `wrangler deploy`，以及创建 Pages 项目。
