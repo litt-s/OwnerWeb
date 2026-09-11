@@ -28,7 +28,7 @@
 - 对象存储：Cloudflare R2（头像、项目封面、视频，经 `/media/*` 访问）
 - 鉴权：PBKDF2（Web Crypto）+ `hono/jwt`
 
-后端（本地，可选，已归档在桌面 `OwnerWeb-backend-node/`）：
+后端（本地，可选，已归档在文件 `OwnerWeb-backend-node/`）：
 
 - Node.js + Express
 - 数据库：SQLite（`node:sqlite`）
