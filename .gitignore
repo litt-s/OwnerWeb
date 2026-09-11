@@ -28,6 +28,9 @@ server/uploads/
 *.db-shm
 *.db-wal
 
+# 私有资料（不提交）
+AboutMe/
+
 # Logs and OS files
 *.log
 .DS_Store
