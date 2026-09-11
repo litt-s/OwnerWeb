@@ -3,17 +3,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 
-function buildChildMap(comments) {
-  const childMap = new Map();
-  for (const comment of comments) {
-    const key = comment.parent_id ?? 0;
-    const list = childMap.get(key) || [];
-    list.push(comment);
-    childMap.set(key, list);
-  }
-  return childMap;
-}
-
 function CommentAvatar({ comment }) {
   const [broken, setBroken] = useState(false);
   const fallback = (comment.nickname || '访')[0];
@@ -29,9 +18,10 @@ function CommentAvatar({ comment }) {
   );
 }
 
-function CommentNode({
+function CommentItem({
   comment,
-  childMap,
+  isReply,
+  parentNickname,
   user,
   replyingTo,
   replyText,
@@ -39,24 +29,23 @@ function CommentNode({
   onReplyTextChange,
   onSubmitReply,
 }) {
-  const children = childMap.get(comment.id) || [];
-
   return (
-    <div className="comment-thread">
-      <article className={comment.parent_id ? 'comment reply' : 'comment'}>
+    <div className="comment-item">
+      <article className={isReply ? 'comment reply' : 'comment'}>
         <CommentAvatar comment={comment} />
         <div className="c-body">
           <div className="c-head">
             <b>{comment.nickname}</b>
+            {isReply && parentNickname && (
+              <span className="reply-to">
+                回复 <em>@{parentNickname}</em>
+              </span>
+            )}
             <time dateTime={comment.created_at}>{comment.created_at}</time>
           </div>
           <p>{comment.content}</p>
           {user && (
-            <button
-              type="button"
-              className="reply-btn"
-              onClick={() => onReply(comment.id)}
-            >
+            <button type="button" className="reply-btn" onClick={() => onReply(comment.id)}>
               回复
             </button>
           )}
@@ -80,24 +69,6 @@ function CommentNode({
               取消
             </button>
           </div>
-        </div>
-      )}
-
-      {children.length > 0 && (
-        <div className="comment-children">
-          {children.map((child) => (
-            <CommentNode
-              key={child.id}
-              comment={child}
-              childMap={childMap}
-              user={user}
-              replyingTo={replyingTo}
-              replyText={replyText}
-              onReply={onReply}
-              onReplyTextChange={onReplyTextChange}
-              onSubmitReply={onSubmitReply}
-            />
-          ))}
         </div>
       )}
     </div>
@@ -126,18 +97,16 @@ export default function CommentThread({
     load();
   }, [endpoint]);
 
-  const childMap = buildChildMap(comments);
-  const topLevel = childMap.get(0) || [];
+  const byId = new Map(comments.map((c) => [c.id, c]));
+  const topLevel = comments.filter((c) => !c.parent_id);
+  // 某条顶层评论下的全部回复（任意层级），扁平化到同一缩进层级
+  const repliesOf = (rootId) => comments.filter((c) => c.parent_id && c.root_id === rootId);
 
   const submit = async (event) => {
     event.preventDefault();
     setErr('');
     try {
-      await api(endpoint, {
-        method: 'POST',
-        token,
-        body: { content },
-      });
+      await api(endpoint, { method: 'POST', token, body: { content } });
       setContent('');
       load();
     } catch (error) {
@@ -150,14 +119,9 @@ export default function CommentThread({
       setErr('回复内容必填');
       return;
     }
-
     setErr('');
     try {
-      await api(endpoint, {
-        method: 'POST',
-        token,
-        body: { content: replyText, parent_id: parentId },
-      });
+      await api(endpoint, { method: 'POST', token, body: { content: replyText, parent_id: parentId } });
       setReplyText('');
       setReplyingTo(null);
       load();
@@ -170,6 +134,15 @@ export default function CommentThread({
     setReplyingTo(replyingTo === commentId ? null : commentId);
     setReplyText('');
     setErr('');
+  };
+
+  const shared = {
+    user,
+    replyingTo,
+    replyText,
+    onReply: handleReply,
+    onReplyTextChange: setReplyText,
+    onSubmitReply: submitReply,
   };
 
   return (
@@ -197,18 +170,19 @@ export default function CommentThread({
         {topLevel.length === 0 && (
           <p className="form-err" style={{ opacity: 0.7 }}>{emptyText}</p>
         )}
-        {topLevel.map((comment) => (
-          <CommentNode
-            key={comment.id}
-            comment={comment}
-            childMap={childMap}
-            user={user}
-            replyingTo={replyingTo}
-            replyText={replyText}
-            onReply={handleReply}
-            onReplyTextChange={setReplyText}
-            onSubmitReply={submitReply}
-          />
+        {topLevel.map((root) => (
+          <div className="comment-thread" key={root.id}>
+            <CommentItem comment={root} isReply={false} parentNickname={null} {...shared} />
+            {repliesOf(root.id).map((reply) => (
+              <CommentItem
+                key={reply.id}
+                comment={reply}
+                isReply
+                parentNickname={byId.get(reply.parent_id)?.nickname}
+                {...shared}
+              />
+            ))}
+          </div>
         ))}
       </div>
     </div>

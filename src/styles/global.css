@@ -1521,8 +1521,12 @@ a.channel:hover {
 .info-block .form {
   gap: 14px;
 }
+.guestbook-col {
+  max-width: 820px;
+  margin-inline: auto;
+}
 .comments {
-  max-width: 760px;
+  max-width: none;
   padding-bottom: 60px;
 }
 .comment-form {
@@ -1562,8 +1566,7 @@ a.channel:hover {
 .comment {
   display: flex;
   gap: 14px;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
 }
 .c-avatar {
   width: 42px;
@@ -1598,6 +1601,14 @@ a.channel:hover {
   font-family: var(--mono);
   font-size: 11px;
   color: var(--text-mute);
+}
+.reply-to {
+  font-size: 12px;
+  color: var(--text-mute);
+}
+.reply-to em {
+  font-style: normal;
+  color: var(--accent);
 }
 .c-body p {
   color: var(--text-dim);
@@ -1830,15 +1841,15 @@ a.channel:hover {
 }
 .comment-thread {
   min-width: 0;
+  border-bottom: 1px solid var(--line);
 }
+.comment-thread:last-child {
+  border-bottom: none;
+}
+/* 回复只缩进一次；更深层级不再叠加缩进 */
 .comment.reply {
-  margin-left: 0;
-  border-top: 1px dashed var(--line);
-}
-.comment-children {
   margin-left: 44px;
-  padding-left: 10px;
-  border-left: 1px dashed var(--line);
+  border-top: 1px dashed var(--line);
 }
 .reply-btn {
   margin-top: 8px;
