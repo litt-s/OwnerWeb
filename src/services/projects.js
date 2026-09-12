@@ -38,3 +38,28 @@ export const uploadProjectMedia = (id, field, file, token) => {
     token,
   }).then((data) => data.project);
 };
+
+// 上传封面（带进度）：fetch 拿不到上传进度，用 XHR
+export const uploadProjectCover = (id, file, token, onProgress) =>
+  new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${import.meta.env.VITE_API_BASE || ''}/api/admin/projects/${encodeURIComponent(id)}/cover`);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      let data = {};
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {
+        /* 忽略非 JSON 响应 */
+      }
+      if (xhr.status >= 200 && xhr.status < 300) resolve(data.project);
+      else reject(new Error(data.error || '请求失败'));
+    };
+    xhr.onerror = () => reject(new Error('请求失败'));
+    const form = new FormData();
+    form.append('cover', file);
+    xhr.send(form);
+  });

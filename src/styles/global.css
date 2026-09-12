@@ -1938,6 +1938,20 @@ a.channel:hover .channel-value::after {
   color: var(--accent);
   margin-top: -8px;
 }
+.upload-progress {
+  width: 100%;
+  height: 6px;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.upload-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: 100px;
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
 .media-path {
   display: block;
   font-family: var(--mono);

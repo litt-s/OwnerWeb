@@ -7,7 +7,7 @@ import {
   createProject,
   updateProject,
   deleteProject,
-  uploadProjectMedia,
+  uploadProjectCover,
   signProjectVideo,
 } from '../../services/projects';
 
@@ -78,6 +78,8 @@ export default function AdminProjects({ token }) {
   const [err, setErr] = useState('');
   const [videoBusy, setVideoBusy] = useState(false);
   const [videoPct, setVideoPct] = useState(0);
+  const [coverBusy, setCoverBusy] = useState(false);
+  const [coverPct, setCoverPct] = useState(0);
 
   const load = () =>
     fetchAdminProjects(token)
@@ -141,25 +143,23 @@ export default function AdminProjects({ token }) {
     }
   };
 
-  const uploadMedia = async (field) => {
-    if (!draft?.id) return;
-    const input = document.getElementById(`admin-upload-${field}`);
-    const file = input?.files?.[0];
-    if (!file) {
-      setErr('请先选择文件');
-      return;
-    }
-
+  const uploadCover = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !draft?.id) return;
     setErr('');
     setMsg('');
+    setCoverBusy(true);
+    setCoverPct(0);
     try {
-      const project = await uploadProjectMedia(draft.id, field, file, token);
+      const project = await uploadProjectCover(draft.id, file, token, setCoverPct);
       await Promise.all([load(), reloadProjects()]);
       setDraft(toDraft(project));
-      setMsg(field === 'video' ? '项目视频已更新' : '项目封面已更新');
-      if (input) input.value = '';
+      setMsg('项目封面已更新');
     } catch (error) {
       setErr(error.message);
+    } finally {
+      setCoverBusy(false);
     }
   };
 
@@ -353,6 +353,11 @@ export default function AdminProjects({ token }) {
                     onChange={uploadVideo}
                   />
                 </label>
+                {videoBusy && (
+                  <div className="upload-progress" role="progressbar" aria-valuenow={videoPct} aria-valuemin={0} aria-valuemax={100}>
+                    <span style={{ width: `${videoPct}%` }} />
+                  </div>
+                )}
                 <span className="editor-note">
                   上传到腾讯云 COS 会自动填入链接；也可直接粘贴 B站 / YouTube / 直链。
                 </span>
@@ -365,10 +370,21 @@ export default function AdminProjects({ token }) {
               <div className="editor-field">
                 <label>项目封面</label>
                 <span className="media-path">{draft.cover || '尚未上传封面'}</span>
-                <label className="file-btn">
-                  上传 / 替换封面
-                  <input id="admin-upload-cover" type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={() => uploadMedia('cover')} />
+                <label className={`file-btn ${coverBusy ? 'is-busy' : ''}`}>
+                  {coverBusy ? `上传中… ${coverPct}%` : '上传 / 替换封面'}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    hidden
+                    disabled={coverBusy || !projects.some((p) => p.id === draft.id)}
+                    onChange={uploadCover}
+                  />
                 </label>
+                {coverBusy && (
+                  <div className="upload-progress" role="progressbar" aria-valuenow={coverPct} aria-valuemin={0} aria-valuemax={100}>
+                    <span style={{ width: `${coverPct}%` }} />
+                  </div>
+                )}
               </div>
               {draft.video && (
                 <ProjectVideo src={draft.video} poster={draft.cover} className="editor-video-preview" />

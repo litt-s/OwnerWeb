@@ -91,6 +91,8 @@
 
 - 修复封面上传失败：`src/api.js` 之前只处理 JSON `body`，忽略了 `uploadProjectMedia` 传入的 `form`，导致 multipart 请求发出空 body，Worker 解析失败、前端只显示「请求失败」；已在 `api()` 增加 `form`（FormData）分支，不手动设 `Content-Type`（由浏览器补 boundary）。线上 `POST /api/admin/projects/:id/cover` 经 Pages 代理实测返回 200。
 
+- 封面上传进度条：`services/projects.js` 新增 `uploadProjectCover`（XHR，可拿上传进度），后台「项目封面」区域新增进度条（`.upload-progress`），上传中显示百分比、成功后显示封面预览；视频上传同步加了同款进度条；封面上传在项目未保存时禁用。
+
 ## 进行中
 
 - 项目进入「Cloudflare 上线」阶段：代码与配置已就绪，待用户创建 D1/KV、配置 secrets 并 `wrangler deploy`，以及创建 Pages 项目。
