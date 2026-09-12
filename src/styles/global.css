@@ -1934,6 +1934,10 @@ a.channel:hover .channel-value::after {
   line-height: 1.6;
   margin: 0 0 14px;
 }
+.editor-note.warn {
+  color: var(--accent);
+  margin-top: -8px;
+}
 .media-path {
   display: block;
   font-family: var(--mono);

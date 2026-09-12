@@ -354,8 +354,13 @@ export default function AdminProjects({ token }) {
                   />
                 </label>
                 <span className="editor-note">
-                  上传到腾讯云 COS 会自动填入链接；也可直接粘贴 B站 / YouTube / 直链。新项目请先保存再上传。
+                  上传到腾讯云 COS 会自动填入链接；也可直接粘贴 B站 / YouTube / 直链。
                 </span>
+                {!projects.some((p) => p.id === draft.id) && (
+                  <span className="editor-note warn">
+                    新项目需要先「保存项目」，视频上传功能才会启用（上传接口要求项目已存在）。
+                  </span>
+                )}
               </div>
               <div className="editor-field">
                 <label>项目封面</label>

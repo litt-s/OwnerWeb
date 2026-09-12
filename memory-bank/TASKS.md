@@ -84,10 +84,10 @@
 
 ## Phase 6：视频对象存储（腾讯云 COS）
 
-- [ ] 6.1 控制台准备（用户操作）：创建 COS 桶（公有读私有写）、创建子账号密钥、配置 CORS 允许前端直传。
+- [x] 6.1 控制台准备（用户操作）：创建 COS 桶（公有读私有写）、创建子账号密钥、配置 CORS 允许前端直传。
 - [x] 6.2 后端接入 COS：新增 `worker/src/lib/cos.js`（COS PUT 预签名），新增「获取视频上传签名」接口 `POST /api/admin/projects/:id/video/sign`，COS 配置走 secrets。
 - [x] 6.3 后台上传视频：项目编辑里选文件 → 前端用签名直传 COS（带进度）→ 把 COS 地址写入项目 `video` 字段；保留手填外链。
-- [ ] 6.4 文档与验证：更新 DEPLOY / TECH_STACK / DATA_MODEL / PROGRESS，线上验证上传与播放。
+- [x] 6.4 文档与验证：更新 DEPLOY / TECH_STACK / DATA_MODEL / PROGRESS，线上验证上传与播放（预签名 200 → 直传 200 → 公有读 200 → 删除 204）。
 
 ## Phase 4：验证
 
