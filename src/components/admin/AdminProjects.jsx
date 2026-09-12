@@ -8,7 +8,26 @@ import {
   updateProject,
   deleteProject,
   uploadProjectMedia,
+  signProjectVideo,
 } from '../../services/projects';
+
+function putToCos(url, authorization, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', url, true);
+    xhr.setRequestHeader('Authorization', authorization);
+    if (file.type) xhr.setRequestHeader('Content-Type', file.type);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`视频上传失败（${xhr.status}）`));
+    };
+    xhr.onerror = () => reject(new Error('视频上传失败，请检查 COS 的 CORS 配置'));
+    xhr.send(file);
+  });
+}
 
 function splitLines(value) {
   return String(value || '').split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
@@ -57,6 +76,8 @@ export default function AdminProjects({ token }) {
   const [confirmId, setConfirmId] = useState(null);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
+  const [videoBusy, setVideoBusy] = useState(false);
+  const [videoPct, setVideoPct] = useState(0);
 
   const load = () =>
     fetchAdminProjects(token)
@@ -139,6 +160,30 @@ export default function AdminProjects({ token }) {
       if (input) input.value = '';
     } catch (error) {
       setErr(error.message);
+    }
+  };
+
+  const uploadVideo = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !draft?.id) return;
+    setErr('');
+    setMsg('');
+    setVideoBusy(true);
+    setVideoPct(0);
+    try {
+      const { uploadUrl, authorization, publicUrl } = await signProjectVideo(
+        draft.id,
+        { filename: file.name },
+        token
+      );
+      await putToCos(uploadUrl, authorization, file, setVideoPct);
+      set('video', publicUrl);
+      setMsg('视频已上传到 COS，请点击「保存项目」写入。');
+    } catch (error) {
+      setErr(error.message);
+    } finally {
+      setVideoBusy(false);
     }
   };
 
@@ -298,8 +343,18 @@ export default function AdminProjects({ token }) {
                   onChange={(event) => set('video', event.target.value)}
                   placeholder="B站 / YouTube 视频页链接，或 .mp4 直链"
                 />
+                <label className={`file-btn ${videoBusy ? 'is-busy' : ''}`}>
+                  {videoBusy ? `上传中… ${videoPct}%` : '上传视频到 COS'}
+                  <input
+                    type="file"
+                    accept="video/*"
+                    hidden
+                    disabled={videoBusy || !projects.some((p) => p.id === draft.id)}
+                    onChange={uploadVideo}
+                  />
+                </label>
                 <span className="editor-note">
-                  支持 B站、YouTube 页面链接（自动嵌入播放）或 .mp4/.webm 直链；留空则显示「未配置」。
+                  上传到腾讯云 COS 会自动填入链接；也可直接粘贴 B站 / YouTube / 直链。新项目请先保存再上传。
                 </span>
               </div>
               <div className="editor-field">

@@ -82,6 +82,13 @@
 - [x] 3.31 手机端性能优化：新增 `useRenderActive`（元素离屏或页面后台时暂停 WebGL 渲染），Hero PCB 与个人介绍硬币在移动端降低 DPR、关闭抗锯齿、降低几何精度，导航栏毛玻璃在窄屏降低模糊强度。
 - [x] 3.32 注册邮箱校验加强：新增 `worker/src/lib/email.js`（严格格式校验、常见拼写错误域名提示、一次性邮箱黑名单、Cloudflare DoH 域名 MX 校验），注册接口接入，前端 `AuthPage` 增加即时格式校验。
 
+## Phase 6：视频对象存储（腾讯云 COS）
+
+- [ ] 6.1 控制台准备（用户操作）：创建 COS 桶（公有读私有写）、创建子账号密钥、配置 CORS 允许前端直传。
+- [x] 6.2 后端接入 COS：新增 `worker/src/lib/cos.js`（COS PUT 预签名），新增「获取视频上传签名」接口 `POST /api/admin/projects/:id/video/sign`，COS 配置走 secrets。
+- [x] 6.3 后台上传视频：项目编辑里选文件 → 前端用签名直传 COS（带进度）→ 把 COS 地址写入项目 `video` 字段；保留手填外链。
+- [ ] 6.4 文档与验证：更新 DEPLOY / TECH_STACK / DATA_MODEL / PROGRESS，线上验证上传与播放。
+
 ## Phase 4：验证
 
 - [x] 4.1 运行 `npm run build`，确认前端构建成功。

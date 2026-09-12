@@ -22,6 +22,13 @@ export const updateProject = (id, payload, token) =>
 export const deleteProject = (id, token) =>
   api(`/api/admin/projects/${encodeURIComponent(id)}`, { method: 'DELETE', token });
 
+export const signProjectVideo = (id, payload, token) =>
+  api(`/api/admin/projects/${encodeURIComponent(id)}/video/sign`, {
+    method: 'POST',
+    body: payload,
+    token,
+  });
+
 export const uploadProjectMedia = (id, field, file, token) => {
   const form = new FormData();
   form.append(field, file);

@@ -19,7 +19,7 @@
 运行时：Cloudflare Workers
 框架：Hono
 数据库：Cloudflare D1（SQLite）
-对象存储：Cloudflare KV（头像、项目封面）；项目视频用外链
+对象存储：Cloudflare KV（头像、项目封面）；项目视频存腾讯云 COS（公有读私有写，后端发预签名、后台直传，数据库只存链接），也兼容 B站/YouTube/直链外链
 鉴权：PBKDF2（Web Crypto）密码哈希 + hono/jwt Bearer Token
 上传：头像走 base64 JSON；项目封面走 multipart（视频改外链，不上传）
 ```

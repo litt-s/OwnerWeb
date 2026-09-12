@@ -90,6 +90,43 @@ npx wrangler deploy
 
 ---
 
+## 三之五、项目视频：腾讯云 COS（公有读私有写）
+
+项目视频存在腾讯云 COS：**后端发预签名、后台直传**，数据库只存最终链接。
+
+### 1. 控制台准备
+1. 对象存储 COS → 创建存储桶：名称全局唯一（如 `ownerweb-media`，控制台会加 APPID 后缀）、地域就近（如 `ap-guangzhou`）、访问权限选 **公有读私有写**。
+2. 访问管理 CAM → 新建**子账号**（仅编程访问），授予 `QcloudCOSDataFullControl`（或仅该桶读写策略），保存 `SecretId` / `SecretKey`（SecretKey 只显示一次）。**不要用主账号密钥**。
+3. 桶 → 安全管理 → 跨域访问 CORS，添加规则：
+   - 来源：`https://ownerweb.pages.dev`（本地调试再加 `http://localhost:5173`）
+   - 操作：`PUT, GET, HEAD, POST`
+   - Allow-Headers：`*`；Expose-Headers：`ETag, x-cos-request-id`；Max-Age：`600`
+
+### 2. 配置密钥
+在根目录 `.env.local` 填：
+```text
+COS_SECRET_ID=
+COS_SECRET_KEY=
+COS_BUCKET=ownerweb-media-<APPID>
+COS_REGION=ap-guangzhou
+COS_VIDEO_PREFIX=videos/
+COS_DOMAIN=            # 可选，自定义/CDN 域名；留空用 COS 默认域名
+```
+然后 `npm run config` 生成配置，再上传 secrets：
+```bash
+cd worker
+npx wrangler secret bulk .secrets.json
+npx wrangler deploy
+```
+
+### 3. 使用
+后台 → 项目管理 → 编辑项目 → 「演示视频链接」下点 **上传视频到 COS**（自动填入链接）→ 保存项目。
+也可直接粘贴 B站 / YouTube / 直链。新项目请先保存再上传。
+
+> 说明：上传走浏览器直传 COS，不经 Worker；桶为公有读，视频直链可直接播放。若用自定义/CDN 域名，需自行备案。
+
+---
+
 ## 四、验证清单
 
 1. 打开 Pages 域名 → 首页、PCB 交互、蜂鸣器跳转留言页正常。

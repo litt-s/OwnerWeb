@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { auth, adminOnly } from '../lib/auth.js';
+import { cosPublicUrl, isCosConfigured, signCosPut } from '../lib/cos.js';
 import {
   extFromMime,
   normalizeProjectInput,
@@ -149,6 +150,22 @@ async function uploadProjectCover(c) {
   return c.json({ project: projectDto(new URL(c.req.url).origin, updated) });
 }
 r.post('/projects/:id/cover', uploadProjectCover);
+
+// 项目视频直传 COS：返回预签名 PUT 地址与最终公网地址（数据库只存最终链接）
+r.post('/projects/:id/video/sign', async (c) => {
+  const row = await c.env.DB.prepare('SELECT id FROM projects WHERE id = ?').bind(c.req.param('id')).first();
+  if (!row) return c.json({ error: '项目不存在' }, 404);
+  if (!isCosConfigured(c.env)) {
+    return c.json({ error: 'COS 未配置（COS_SECRET_ID / COS_SECRET_KEY / COS_BUCKET / COS_REGION）' }, 500);
+  }
+  const body = await c.req.json().catch(() => ({}));
+  const filename = String(body.filename || '').trim();
+  const ext = (filename.match(/\.[a-z0-9]+$/i)?.[0] || '.mp4').toLowerCase();
+  const prefix = String(c.env.COS_VIDEO_PREFIX || 'videos/').replace(/^\/+/, '');
+  const key = `${prefix}${row.id}-${Date.now()}${ext}`;
+  const { authorization, uploadUrl, expires } = await signCosPut(c.env, key);
+  return c.json({ uploadUrl, authorization, key, publicUrl: cosPublicUrl(c.env, key), expires });
+});
 
 /* ---------- 优势管理 ---------- */
 r.get('/strengths', async (c) => {

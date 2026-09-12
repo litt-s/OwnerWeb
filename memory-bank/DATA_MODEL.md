@@ -43,7 +43,7 @@ projects
 | `tagline` | TEXT | 一句话定位 |
 | `desc` | TEXT | 卡片简介 |
 | `long_desc` | TEXT | 详情页长介绍 |
-| `video` | TEXT | 演示视频 URL，可为空 |
+| `video` | TEXT | 演示视频 URL（腾讯云 COS 直链或 B站/YouTube/外链），可为空 |
 | `cover` | TEXT | 上传封面 URL，可为空 |
 | `link` | TEXT | 外部仓库地址，可为空 |
 | `link_label` | TEXT | 外部链接显示文字 |
@@ -84,7 +84,7 @@ projects
 - `name` 必填，最长 100 字符。
 - `sort_order` 必须是不小于 1 的整数。
 - `tech` 和 `points` 接受数组或换行分隔文本，保存前去除空白项。
-- `cover` 可为空；上传后保存存储 key（Worker 存 KV，Node 存 `/uploads/projects/...`），对外由后端转换为可访问 URL。`video` 保存外链 URL（B站/YouTube/直链），不存文件。
+- `cover` 可为空；上传后保存存储 key（Worker 存 KV，Node 存 `/uploads/projects/...`），对外由后端转换为可访问 URL。`video` 保存可访问 URL：腾讯云 COS 直链（后台直传，数据库只存链接）或 B站/YouTube/直链外链，不存文件。
 - `requires_login` 为 `1` 时，未登录访客在 `GET /api/projects` 只会拿到锁定卡片信息（`locked: true`，`desc`/`longDesc`/`video`/`link`/`points` 均为空），`GET /api/projects/:id` 返回 `401`；携带有效 token 的请求返回完整内容。
 - 公开接口返回上述序列化字段，不返回时间戳。
 
@@ -433,7 +433,7 @@ project_comments
 | PUT | `/api/admin/projects/:id` | 修改项目 | 管理员 |
 | DELETE | `/api/admin/projects/:id` | 删除项目及其评论 | 管理员 |
 | POST | `/api/admin/projects/:id/cover` | 上传或替换项目封面，multipart 字段名 `cover` | 管理员 |
-| POST | `/api/admin/projects/:id/video` | 上传或替换项目视频，multipart 字段名 `video` | 管理员 |
+| POST | `/api/admin/projects/:id/video/sign` | 获取项目视频直传 COS 的预签名（请求 `{ filename }`，返回 `uploadUrl` / `authorization` / `publicUrl`） | 管理员 |
 | GET | `/api/admin/strengths` | 获取优势管理列表 | 管理员 |
 | POST | `/api/admin/strengths` | 新增优势 | 管理员 |
 | PUT | `/api/admin/strengths/:id` | 修改优势 | 管理员 |

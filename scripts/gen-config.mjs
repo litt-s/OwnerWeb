@@ -58,6 +58,12 @@ id = "${get('CF_KV_ID', 'local-dev-placeholder')}"
 ADMIN_EMAIL=${get('ADMIN_EMAIL')}
 ADMIN_PASSWORD=${get('ADMIN_PASSWORD')}
 CORS_ORIGIN=${get('CORS_ORIGIN', 'http://localhost:5173')}
+COS_SECRET_ID=${get('COS_SECRET_ID')}
+COS_SECRET_KEY=${get('COS_SECRET_KEY')}
+COS_BUCKET=${get('COS_BUCKET')}
+COS_REGION=${get('COS_REGION')}
+COS_VIDEO_PREFIX=${get('COS_VIDEO_PREFIX', 'videos/')}
+COS_DOMAIN=${get('COS_DOMAIN')}
 `;
   writeFileSync(resolve(ROOT, 'worker/.dev.vars'), devVars);
 
@@ -66,6 +72,12 @@ CORS_ORIGIN=${get('CORS_ORIGIN', 'http://localhost:5173')}
     ADMIN_EMAIL: get('ADMIN_EMAIL'),
     ADMIN_PASSWORD: get('ADMIN_PASSWORD'),
     CORS_ORIGIN: get('CORS_ORIGIN'),
+    COS_SECRET_ID: get('COS_SECRET_ID'),
+    COS_SECRET_KEY: get('COS_SECRET_KEY'),
+    COS_BUCKET: get('COS_BUCKET'),
+    COS_REGION: get('COS_REGION'),
+    COS_VIDEO_PREFIX: get('COS_VIDEO_PREFIX', 'videos/'),
+    COS_DOMAIN: get('COS_DOMAIN'),
   };
   writeFileSync(resolve(ROOT, 'worker/.secrets.json'), JSON.stringify(secrets, null, 2) + '\n');
 
@@ -74,6 +86,9 @@ CORS_ORIGIN=${get('CORS_ORIGIN', 'http://localhost:5173')}
   console.log('[config] 已生成 worker/wrangler.toml、worker/.dev.vars、worker/.secrets.json');
   warnIfEmpty('CF_D1_ID');
   warnIfEmpty('CF_KV_ID');
+  warnIfEmpty('COS_BUCKET');
+  warnIfEmpty('COS_REGION');
+  warnIfEmpty('COS_SECRET_ID');
   return true;
 }
 
