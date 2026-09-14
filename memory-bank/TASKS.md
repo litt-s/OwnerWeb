@@ -106,5 +106,5 @@
 - [x] 5.6 归档 Node 后端到桌面 `OwnerWeb-backend-node/`，从项目移除 `server/`（保留可回放）。
 - [x] 5.7 清理敏感信息并推送 GitHub（origin = `https://github.com/litt-s/OwnerWeb.git`，Gitee 保留为 `gitee`）。
 - [x] 5.8 在 Cloudflare 创建 D1/KV、配置 secrets 并 `npx wrangler deploy`（已部署，含 D1 迁移、KV、COS secrets）。
-- [ ] 5.9 配置 Pages 环境变量与自定义域名 HTTPS：环境变量 `API_ORIGIN` 已配置（前端同源代理）；**自定义域名 + HTTPS 待备案后配置**。
+- [x] 5.9 配置 Pages 环境变量与自定义域名 HTTPS：环境变量 `API_ORIGIN` 已配置（前端同源 `/api` 代理，实测可用）；自定义域名为**可选项**，继续使用免费的 `ownerweb.pages.dev`（长期有效、无需备案）；如日后需要品牌域名，再在 Pages 添加自定义域即可。
 - [x] 5.10 上线后按 `DEPLOY.md` 的验证清单逐项检查（线上 Pages 域名已验证首页、登录、留言、后台、媒体代理与视频上传）。
