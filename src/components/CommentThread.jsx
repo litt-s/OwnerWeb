@@ -28,6 +28,7 @@ function CommentItem({
   onReply,
   onReplyTextChange,
   onSubmitReply,
+  busy,
 }) {
   return (
     <div className="comment-item">
@@ -62,8 +63,8 @@ function CommentItem({
             onChange={(event) => onReplyTextChange(event.target.value)}
           />
           <div className="reply-actions">
-            <button type="button" className="submit" onClick={() => onSubmitReply(comment.id)}>
-              发布回复
+            <button type="button" className="submit" onClick={() => onSubmitReply(comment.id)} disabled={busy}>
+              {busy ? '发布中…' : '发布回复'}
             </button>
             <button type="button" className="cancel-btn" onClick={() => onReply(null)}>
               取消
@@ -86,14 +87,18 @@ export default function CommentThread({
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
 
   const load = () =>
     api(endpoint)
       .then((data) => setComments(data.comments))
-      .catch((error) => setErr(error.message));
+      .catch((error) => setErr(error.message))
+      .finally(() => setLoading(false));
 
   useEffect(() => {
     setErr('');
+    setLoading(true);
     load();
   }, [endpoint]);
 
@@ -105,12 +110,15 @@ export default function CommentThread({
   const submit = async (event) => {
     event.preventDefault();
     setErr('');
+    setBusy(true);
     try {
       await api(endpoint, { method: 'POST', token, body: { content } });
       setContent('');
       load();
     } catch (error) {
       setErr(error.message);
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -120,6 +128,7 @@ export default function CommentThread({
       return;
     }
     setErr('');
+    setBusy(true);
     try {
       await api(endpoint, { method: 'POST', token, body: { content: replyText, parent_id: parentId } });
       setReplyText('');
@@ -127,6 +136,8 @@ export default function CommentThread({
       load();
     } catch (error) {
       setErr(error.message);
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -143,6 +154,7 @@ export default function CommentThread({
     onReply: handleReply,
     onReplyTextChange: setReplyText,
     onSubmitReply: submitReply,
+    busy,
   };
 
   return (
@@ -157,7 +169,7 @@ export default function CommentThread({
             onChange={(event) => setContent(event.target.value)}
           />
           {err && <p className="form-err">{err}</p>}
-          <button className="submit" type="submit">{submitLabel}</button>
+          <button className="submit" type="submit" disabled={busy}>{busy ? '提交中…' : submitLabel}</button>
         </form>
       ) : (
         <div className="comment-form">
@@ -167,10 +179,11 @@ export default function CommentThread({
       )}
 
       <div className="comment-list">
-        {topLevel.length === 0 && (
+        {loading && <p className="form-err" style={{ opacity: 0.7 }}>正在加载留言…</p>}
+        {!loading && topLevel.length === 0 && (
           <p className="form-err" style={{ opacity: 0.7 }}>{emptyText}</p>
         )}
-        {topLevel.map((root) => (
+        {!loading && topLevel.map((root) => (
           <div className="comment-thread" key={root.id}>
             <CommentItem comment={root} isReply={false} parentNickname={null} {...shared} />
             {repliesOf(root.id).map((reply) => (

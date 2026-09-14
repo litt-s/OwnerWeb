@@ -9,7 +9,8 @@
     "start": "node scripts/dev.mjs",
     "backend": "node scripts/backend.mjs",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:api": "node scripts/test-api.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "^8.18.0",

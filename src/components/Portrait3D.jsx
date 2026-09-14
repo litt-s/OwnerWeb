@@ -196,6 +196,8 @@ export default function Portrait3D() {
     <div
       ref={wrapRef}
       className="portrait-coin3d"
+      role="img"
+      aria-label="可拖拽旋转的 3D 金属硬币"
       onPointerDown={onDown}
       onPointerMove={onMove}
       onPointerUp={onUp}

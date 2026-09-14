@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 // 智能视频播放器：
 //   - B站视频页链接 / 嵌入链接 → B站 iframe 播放器
 //   - YouTube 链接 → YouTube iframe 播放器
@@ -33,8 +35,18 @@ function toEmbed(url) {
 }
 
 export default function ProjectVideo({ src, poster, className = '' }) {
+  const [failed, setFailed] = useState(false);
   const embed = toEmbed(src);
   if (!embed) return null;
+
+  if (failed) {
+    return (
+      <div className={`project-video-fail ${className}`.trim()}>
+        <p>视频加载失败，请检查视频链接是否有效</p>
+        <a href={embed.src} target="_blank" rel="noreferrer">在新窗口打开视频 ↗</a>
+      </div>
+    );
+  }
 
   if (embed.type === 'iframe') {
     return (
@@ -56,6 +68,7 @@ export default function ProjectVideo({ src, poster, className = '' }) {
       poster={poster || undefined}
       controls
       preload="metadata"
+      onError={() => setFailed(true)}
     />
   );
 }

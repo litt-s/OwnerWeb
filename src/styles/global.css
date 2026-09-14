@@ -2118,6 +2118,24 @@ iframe.editor-video-preview {
   color: var(--text-mute);
   margin-top: 8px;
 }
+.project-video-fail {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  text-align: center;
+  aspect-ratio: 16 / 9;
+  border: 1px dashed var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text-dim);
+}
+.project-video-fail p {
+  margin: 0;
+}
+.project-video-fail a {
+  color: var(--accent);
+  font-size: 14px;
+}
 .proj-detail-body {
   max-width: none;
 }
