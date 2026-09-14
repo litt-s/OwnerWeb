@@ -10,6 +10,16 @@ import {
 
 const r = new Hono();
 
+// 顶层评论分页参数：limit（默认 10，上限 50）、cursor（keyset，取上页最后一个 id）
+function pageParams(c) {
+  const sp = new URL(c.req.url).searchParams;
+  const rawLimit = Number(sp.get('limit'));
+  const limit = Number.isInteger(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 50) : 10;
+  const rawCursor = Number(sp.get('cursor'));
+  const cursor = Number.isInteger(rawCursor) && rawCursor > 0 ? rawCursor : 0;
+  return { limit, cursor };
+}
+
 /* 优势 */
 r.get('/strengths', async (c) => {
   const { results } = await c.env.DB.prepare('SELECT * FROM strengths ORDER BY sort_order ASC, id ASC').all();
@@ -42,13 +52,40 @@ r.get('/projects/:projectId', maybeAuth, async (c) => {
   return c.json({ project: projectDto(origin, row) });
 });
 
-/* 留言（访客留言） */
+/* 留言（访客留言）：顶层评论 keyset 分页 */
 r.get('/guestbook-comments', async (c) => {
   const origin = new URL(c.req.url).origin;
+  const { limit, cursor } = pageParams(c);
   const { results } = await c.env.DB.prepare(
-    `SELECT c.*, u.avatar AS user_avatar FROM guestbook_comments c LEFT JOIN users u ON u.id = c.user_id ORDER BY c.created_at ASC, c.id ASC`
-  ).all();
-  return c.json({ comments: results.map((row) => publicComment(origin, row)) });
+    `SELECT c.*, u.avatar AS user_avatar,
+       (SELECT COUNT(*) FROM guestbook_comments r WHERE r.root_id = c.id AND r.parent_id IS NOT NULL) AS reply_count
+     FROM guestbook_comments c LEFT JOIN users u ON u.id = c.user_id
+     WHERE c.parent_id IS NULL AND c.id > ?
+     ORDER BY c.id ASC LIMIT ?`
+  )
+    .bind(cursor, limit + 1)
+    .all();
+  const hasMore = results.length > limit;
+  const page = hasMore ? results.slice(0, limit) : results;
+  return c.json({
+    comments: page.map((row) => publicComment(origin, row)),
+    hasMore,
+    nextCursor: hasMore ? page[page.length - 1].id : null,
+  });
+});
+
+/* 某条顶层留言下的全部回复（按需加载） */
+r.get('/guestbook-comments/:rootId/replies', async (c) => {
+  const origin = new URL(c.req.url).origin;
+  const rootId = Number(c.req.param('rootId'));
+  if (!Number.isInteger(rootId) || rootId <= 0) return c.json({ error: '参数不正确' }, 400);
+  const { results } = await c.env.DB.prepare(
+    `SELECT c.*, u.avatar AS user_avatar FROM guestbook_comments c LEFT JOIN users u ON u.id = c.user_id
+     WHERE c.root_id = ? AND c.parent_id IS NOT NULL ORDER BY c.id ASC`
+  )
+    .bind(rootId)
+    .all();
+  return c.json({ replies: results.map((row) => publicComment(origin, row)) });
 });
 
 async function insertComment(env, table, columns, values, rootId) {
@@ -83,16 +120,44 @@ r.post('/guestbook-comments', auth, async (c) => {
   return c.json({ comment: publicComment(new URL(c.req.url).origin, comment) }, 201);
 });
 
-/* 项目评论 */
+/* 项目评论：顶层评论 keyset 分页 */
 r.get('/projects/:projectId/comments', async (c) => {
   const origin = new URL(c.req.url).origin;
   const pid = c.req.param('projectId');
   const project = await c.env.DB.prepare('SELECT id FROM projects WHERE id = ?').bind(pid).first();
   if (!project) return c.json({ error: '项目不存在' }, 404);
+  const { limit, cursor } = pageParams(c);
   const { results } = await c.env.DB.prepare(
-    `SELECT c.*, u.avatar AS user_avatar FROM project_comments c LEFT JOIN users u ON u.id = c.user_id WHERE c.project_id = ? ORDER BY c.created_at ASC, c.id ASC`
-  ).bind(pid).all();
-  return c.json({ comments: results.map((row) => publicComment(origin, row)) });
+    `SELECT c.*, u.avatar AS user_avatar,
+       (SELECT COUNT(*) FROM project_comments r WHERE r.root_id = c.id AND r.parent_id IS NOT NULL) AS reply_count
+     FROM project_comments c LEFT JOIN users u ON u.id = c.user_id
+     WHERE c.project_id = ? AND c.parent_id IS NULL AND c.id > ?
+     ORDER BY c.id ASC LIMIT ?`
+  )
+    .bind(pid, cursor, limit + 1)
+    .all();
+  const hasMore = results.length > limit;
+  const page = hasMore ? results.slice(0, limit) : results;
+  return c.json({
+    comments: page.map((row) => publicComment(origin, row)),
+    hasMore,
+    nextCursor: hasMore ? page[page.length - 1].id : null,
+  });
+});
+
+/* 某条顶层项目评论下的全部回复（按需加载） */
+r.get('/projects/:projectId/comments/:rootId/replies', async (c) => {
+  const origin = new URL(c.req.url).origin;
+  const pid = c.req.param('projectId');
+  const rootId = Number(c.req.param('rootId'));
+  if (!Number.isInteger(rootId) || rootId <= 0) return c.json({ error: '参数不正确' }, 400);
+  const { results } = await c.env.DB.prepare(
+    `SELECT c.*, u.avatar AS user_avatar FROM project_comments c LEFT JOIN users u ON u.id = c.user_id
+     WHERE c.project_id = ? AND c.root_id = ? AND c.parent_id IS NOT NULL ORDER BY c.id ASC`
+  )
+    .bind(pid, rootId)
+    .all();
+  return c.json({ replies: results.map((row) => publicComment(origin, row)) });
 });
 
 r.post('/projects/:projectId/comments', auth, async (c) => {

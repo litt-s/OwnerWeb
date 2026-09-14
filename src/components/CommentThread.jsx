@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 
+const PAGE_SIZE = 10;
+
 function CommentAvatar({ comment }) {
   const [broken, setBroken] = useState(false);
   const fallback = (comment.nickname || '访')[0];
@@ -46,7 +48,7 @@ function CommentItem({
           </div>
           <p>{comment.content}</p>
           {user && (
-            <button type="button" className="reply-btn" onClick={() => onReply(comment.id)}>
+            <button type="button" className="reply-btn" onClick={() => onReply(comment.id, comment.root_id || comment.id)}>
               回复
             </button>
           )}
@@ -63,7 +65,12 @@ function CommentItem({
             onChange={(event) => onReplyTextChange(event.target.value)}
           />
           <div className="reply-actions">
-            <button type="button" className="submit" onClick={() => onSubmitReply(comment.id)} disabled={busy}>
+            <button
+              type="button"
+              className="submit"
+              onClick={() => onSubmitReply(comment.id, comment.root_id || comment.id)}
+              disabled={busy}
+            >
               {busy ? '发布中…' : '发布回复'}
             </button>
             <button type="button" className="cancel-btn" onClick={() => onReply(null)}>
@@ -83,29 +90,81 @@ export default function CommentThread({
 }) {
   const { user, token } = useAuth();
   const [comments, setComments] = useState([]);
+  const [replies, setReplies] = useState({});
+  const [expanded, setExpanded] = useState(() => new Set());
+  const [cursor, setCursor] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [content, setContent] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [err, setErr] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
 
-  const load = () =>
-    api(endpoint)
-      .then((data) => setComments(data.comments))
-      .catch((error) => setErr(error.message))
-      .finally(() => setLoading(false));
+  const loadFirst = async () => {
+    setLoading(true);
+    setErr('');
+    try {
+      const data = await api(`${endpoint}?limit=${PAGE_SIZE}`);
+      setComments(data.comments || []);
+      setCursor(data.nextCursor || 0);
+      setHasMore(!!data.hasMore);
+      setReplies({});
+      setExpanded(new Set());
+    } catch (error) {
+      setErr(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setErr('');
-    setLoading(true);
-    load();
+    loadFirst();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint]);
 
-  const byId = new Map(comments.map((c) => [c.id, c]));
-  const topLevel = comments.filter((c) => !c.parent_id);
-  // 某条顶层评论下的全部回复（任意层级），扁平化到同一缩进层级
-  const repliesOf = (rootId) => comments.filter((c) => c.parent_id && c.root_id === rootId);
+  const loadMore = async () => {
+    if (!hasMore || loadingMore) return;
+    setLoadingMore(true);
+    setErr('');
+    try {
+      const data = await api(`${endpoint}?limit=${PAGE_SIZE}&cursor=${cursor}`);
+      setComments((prev) => [...prev, ...(data.comments || [])]);
+      setCursor(data.nextCursor || 0);
+      setHasMore(!!data.hasMore);
+    } catch (error) {
+      setErr(error.message);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const fetchReplies = async (rootId) => {
+    const data = await api(`${endpoint}/${rootId}/replies`);
+    setReplies((prev) => ({ ...prev, [rootId]: data.replies || [] }));
+    return data.replies || [];
+  };
+
+  const toggleReplies = async (rootId) => {
+    setErr('');
+    if (expanded.has(rootId)) {
+      setExpanded((prev) => {
+        const next = new Set(prev);
+        next.delete(rootId);
+        return next;
+      });
+      return;
+    }
+    setExpanded((prev) => new Set(prev).add(rootId));
+    if (!replies[rootId]) {
+      try {
+        await fetchReplies(rootId);
+      } catch (error) {
+        setErr(error.message);
+      }
+    }
+  };
 
   const submit = async (event) => {
     event.preventDefault();
@@ -114,7 +173,7 @@ export default function CommentThread({
     try {
       await api(endpoint, { method: 'POST', token, body: { content } });
       setContent('');
-      load();
+      await loadFirst();
     } catch (error) {
       setErr(error.message);
     } finally {
@@ -122,7 +181,7 @@ export default function CommentThread({
     }
   };
 
-  const submitReply = async (parentId) => {
+  const submitReply = async (parentId, rootId) => {
     if (!replyText.trim()) {
       setErr('回复内容必填');
       return;
@@ -133,7 +192,9 @@ export default function CommentThread({
       await api(endpoint, { method: 'POST', token, body: { content: replyText, parent_id: parentId } });
       setReplyText('');
       setReplyingTo(null);
-      load();
+      await fetchReplies(rootId);
+      setExpanded((prev) => new Set(prev).add(rootId));
+      setComments((prev) => prev.map((c) => (c.id === rootId ? { ...c, replyCount: (c.replyCount || 0) + 1 } : c)));
     } catch (error) {
       setErr(error.message);
     } finally {
@@ -168,7 +229,6 @@ export default function CommentThread({
             value={content}
             onChange={(event) => setContent(event.target.value)}
           />
-          {err && <p className="form-err">{err}</p>}
           <button className="submit" type="submit" disabled={busy}>{busy ? '提交中…' : submitLabel}</button>
         </form>
       ) : (
@@ -178,25 +238,41 @@ export default function CommentThread({
         </div>
       )}
 
+      {err && <p className="form-err">{err}</p>}
+
       <div className="comment-list">
         {loading && <p className="form-err" style={{ opacity: 0.7 }}>正在加载留言…</p>}
-        {!loading && topLevel.length === 0 && (
+        {!loading && comments.length === 0 && (
           <p className="form-err" style={{ opacity: 0.7 }}>{emptyText}</p>
         )}
-        {!loading && topLevel.map((root) => (
-          <div className="comment-thread" key={root.id}>
-            <CommentItem comment={root} isReply={false} parentNickname={null} {...shared} />
-            {repliesOf(root.id).map((reply) => (
-              <CommentItem
-                key={reply.id}
-                comment={reply}
-                isReply
-                parentNickname={byId.get(reply.parent_id)?.nickname}
-                {...shared}
-              />
-            ))}
-          </div>
-        ))}
+        {!loading && comments.map((root) => {
+          const threadReplies = replies[root.id] || [];
+          const isOpen = expanded.has(root.id);
+          return (
+            <div className="comment-thread" key={root.id}>
+              <CommentItem comment={root} isReply={false} parentNickname={null} {...shared} />
+              {isOpen && threadReplies.map((reply) => (
+                <CommentItem
+                  key={reply.id}
+                  comment={reply}
+                  isReply
+                  parentNickname={threadReplies.find((r) => r.id === reply.parent_id)?.nickname || root.nickname}
+                  {...shared}
+                />
+              ))}
+              {root.replyCount > 0 && (
+                <button type="button" className="load-replies" onClick={() => toggleReplies(root.id)}>
+                  {isOpen ? '收起回复' : `查看 ${root.replyCount} 条回复`}
+                </button>
+              )}
+            </div>
+          );
+        })}
+        {!loading && hasMore && (
+          <button type="button" className="load-more" onClick={loadMore} disabled={loadingMore}>
+            {loadingMore ? '加载中…' : '加载更多评论'}
+          </button>
+        )}
       </div>
     </div>
   );

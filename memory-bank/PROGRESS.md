@@ -100,7 +100,7 @@
   - `4.2` 新增 `scripts/test-api.mjs`（`npm run test:api`，线上 13/13 通过）；`4.3`/`4.4` 手工与生产验证。
   - `5.8`/`5.10` 部署与上线验证确认；`5.9` 环境变量已完成、自定义域名待备案。
   - `5.9` 已确认完成：`API_ORIGIN` 环境变量已配；自定义域名为可选项，决定继续使用免费的 `ownerweb.pages.dev`（长期有效、无需备案）。
-  - 仍未完成：`1.11`（评论分页，数据量增长后再做）。
+- 评论分页与线程懒加载（`1.11`）：公开评论接口改为顶层评论 keyset 分页（`limit` 默认 10/上限 50、`cursor` 为上页最后 id，按 `id ASC`），返回 `{ comments, hasMore, nextCursor }`，每条顶层评论带 `replyCount`；新增 `GET /api/guestbook-comments/:rootId/replies` 与 `GET /api/projects/:projectId/comments/:rootId/replies` 按需加载整条线程；前端 `CommentThread` 改为「分页 + 查看 N 条回复/收起/加载更多评论」。线上验证通过（3 条顶层分两页、嵌套回复计数与懒加载正确，测试数据已清理）。TASKS 全部完成（`1.11` 为最后一项）。
 
 ## 进行中
 

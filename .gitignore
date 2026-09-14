@@ -30,6 +30,13 @@ server/uploads/
 
 # 私有资料（不提交）
 AboutMe/
+# 简历等个人文件（不提交、不推送）
+*简历*.txt
+*简历*.doc
+*简历*.docx
+*简历*.pdf
+*resume*.txt
+*resume*.pdf
 
 # Logs and OS files
 *.log

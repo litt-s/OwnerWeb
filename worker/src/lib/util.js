@@ -60,6 +60,7 @@ export const publicComment = (origin, c) => ({
   parent_id: c.parent_id,
   root_id: c.root_id,
   created_at: c.created_at,
+  replyCount: c.reply_count !== undefined ? Number(c.reply_count) : 0,
 });
 
 export function projectDto(origin, row, { locked = false } = {}) {

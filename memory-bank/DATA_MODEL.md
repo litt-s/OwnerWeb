@@ -373,7 +373,7 @@ project_comments
 - 昵称取用户昵称或邮箱前缀。
 - 项目评论的 `project_id` 来自路由，必须对应存在的项目。
 - `parent_id` 必须指向同表、同项目下存在的评论。
-- 公开评论接口只返回 `id`、`nickname`、`avatar`、`content`、`parent_id`、`root_id`、`created_at`。
+- 公开评论接口只返回 `id`、`nickname`、`avatar`、`content`、`parent_id`、`root_id`、`created_at`、`replyCount`（顶层评论的回复总数，回复项为 `0`）。
 - `avatar` 通过 `LEFT JOIN users` 读取用户当前头像，不把评论邮箱或 `user_id` 暴露给公开接口；用户上传新头像后，已有评论头像会同步变化。
 
 项目内容：
@@ -400,11 +400,16 @@ project_comments
 - 姓名、职业定位、邮箱、电话、主标题和经历简介必填。
 - 邮箱格式、各类文本长度和经历统计条数由后端校验。
 
+分页与线程加载：
+
+- 公开的顶层评论列表使用 **keyset 分页**：`GET ...?limit=<1-50>&cursor=<上页最后一个顶层评论 id>`，按 `id ASC` 取 `parent_id IS NULL` 的评论，返回 `{ comments, hasMore, nextCursor }`（`limit` 默认 10）。
+- 每条顶层评论带 `replyCount`（该线程回复总数）；回复不随列表返回，点击「查看 N 条回复」时再请求 `GET .../<rootId>/replies` 按需加载整条线程的回复。
+
 待补强：
 
 - 删除父评论时当前会连同整棵子树一起删除，后续可考虑改为保留子回复并提升层级。
 - 管理端评论列表仍返回 `email` 和 `user_id`，属于管理员可见字段。
-- 尚未实现按 `root_id` 加载整棵线程和顶层评论分页懒加载。
+- 顶层评论按 `id ASC` 顺序分页（旧评论在前）；如需「最新在前」可改为 `id DESC`。
 
 ## 10. API 清单
 
@@ -419,11 +424,13 @@ project_comments
 | GET | `/api/strengths` | 获取个人优势列表 | 否 |
 | GET | `/api/content/site` | 获取 Hero、身份联系信息和经历内容 | 否 |
 | GET | `/api/health` | 检查 API 与 SQLite 数据库状态 | 否 |
-| GET | `/api/guestbook-comments` | 获取访客留言树列表 | 否 |
+| GET | `/api/guestbook-comments` | 获取访客留言顶层评论（keyset 分页：`limit`/`cursor`） | 否 |
+| GET | `/api/guestbook-comments/:rootId/replies` | 获取某条顶层留言下的全部回复 | 否 |
 | POST | `/api/guestbook-comments` | 提交访客留言或回复 | 是 |
 | GET | `/api/projects` | 获取项目列表；可选携带 token，登录后返回受限项目完整内容 | 否（可选登录） |
 | GET | `/api/projects/:projectId` | 获取项目详情；受限项目未登录返回 401 | 否（可选登录） |
-| GET | `/api/projects/:projectId/comments` | 获取指定项目的多级评论 | 否 |
+| GET | `/api/projects/:projectId/comments` | 获取项目顶层评论（keyset 分页：`limit`/`cursor`） | 否 |
+| GET | `/api/projects/:projectId/comments/:rootId/replies` | 获取某条顶层项目评论下的全部回复 | 否 |
 | POST | `/api/projects/:projectId/comments` | 提交项目评论或任意层级回复 | 是 |
 | GET | `/api/admin/comments` | 获取访客留言和项目评论管理列表 | 管理员 |
 | DELETE | `/api/admin/guestbook-comments/:id` | 删除访客留言及其回复 | 管理员 |
