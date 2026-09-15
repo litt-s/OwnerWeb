@@ -102,6 +102,8 @@
   - `5.9` 已确认完成：`API_ORIGIN` 环境变量已配；自定义域名为可选项，决定继续使用免费的 `ownerweb.pages.dev`（长期有效、无需备案）。
 - 评论分页与线程懒加载（`1.11`）：公开评论接口改为顶层评论 keyset 分页（`limit` 默认 10/上限 50、`cursor` 为上页最后 id，按 `id ASC`），返回 `{ comments, hasMore, nextCursor }`，每条顶层评论带 `replyCount`；新增 `GET /api/guestbook-comments/:rootId/replies` 与 `GET /api/projects/:projectId/comments/:rootId/replies` 按需加载整条线程；前端 `CommentThread` 改为「分页 + 查看 N 条回复/收起/加载更多评论」。线上验证通过（3 条顶层分两页、嵌套回复计数与懒加载正确，测试数据已清理）。TASKS 全部完成（`1.11` 为最后一项）。
 
+- 文档：按当前线上版本重写 `memory-bank/PRD.md`——补充顶部导航（品牌图标 + Li的个人博客 + 站内搜索 + 后台入口 + 登录态/联系我）、首页五大区块与 3D PCB 热点、各一级页面与后台五个页签的布局，以及线上已实现能力（COS 视频、仓库平台选填、联系我标题可编辑、项目登录可见、评论分页与线程懒加载、邮箱 MX 校验、移动端优化）；「暂不做」移除分页、保留验证码/找回密码等。
+
 ## 进行中
 
 - 项目进入「Cloudflare 上线」阶段：代码与配置已就绪，待用户创建 D1/KV、配置 secrets 并 `wrangler deploy`，以及创建 Pages 项目。
