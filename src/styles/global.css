@@ -426,11 +426,11 @@ ul {
 .hero-model {
   position: relative;
   z-index: 2;
+  grid-area: model;
   width: 100%;
   max-width: 1440px;
-  height: clamp(340px, 57vh, 680px);
+  height: clamp(360px, 68vh, 760px);
   margin: 0 auto 4px;
-  transform: translateY(clamp(8px, 1.2vh, 16px));
 }
 .hero-veil {
   position: absolute;
@@ -451,15 +451,18 @@ ul {
   padding-inline: var(--pad);
   padding-top: clamp(36px, 6vh, 72px);
   padding-bottom: clamp(24px, 4vh, 56px);
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(320px, 0.78fr) minmax(0, 1.22fr);
+  grid-template-areas: 'text model';
   align-items: center;
-  text-align: center;
+  gap: clamp(32px, 5vw, 96px);
 }
 .hero-text {
   position: relative;
   z-index: 2;
-  margin-top: clamp(0px, 1.5vh, 16px);
+  grid-area: text;
+  max-width: 620px;
+  text-align: left;
 }
 .mcu-wrap {
   position: relative;
@@ -534,7 +537,7 @@ ul {
   max-width: 620px;
   font-size: clamp(16px, 1.6vw, 20px);
   color: var(--text-dim);
-  margin-inline: auto;
+  margin-inline: 0;
 }
 .hero-scroll-hint {
   display: inline-flex;
@@ -546,8 +549,7 @@ ul {
   font-size: 11px;
   letter-spacing: 0.16em;
   color: var(--accent);
-  text-align: center;
-  transform: translateY(-6px);
+  text-align: left;
   transition: color 0.25s ease;
 }
 .hero-scroll-hint:hover {
@@ -2243,6 +2245,29 @@ iframe.editor-video-preview {
 /* ---------- Responsive ---------- */
 @media (max-width: 1080px) {
   .hero-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    text-align: center;
+  }
+  .hero-model {
+    order: 1;
+    height: clamp(320px, 57vh, 620px);
+  }
+  .hero-text {
+    order: 2;
+    max-width: 680px;
+    text-align: center;
+  }
+  .hero-sub {
+    margin-inline: auto;
+  }
+  .hero-scroll-hint {
+    align-items: center;
+    text-align: center;
+  }
+  .hero-inner {
     justify-content: center;
   }
   .hero-title .t-line {
@@ -2292,6 +2317,9 @@ iframe.editor-video-preview {
 @media (max-width: 680px) {
   .hero-inner {
     justify-content: center;
+  }
+  .hero-model {
+    height: clamp(300px, 52vh, 460px);
   }
   .str-grid {
     grid-template-columns: 1fr;

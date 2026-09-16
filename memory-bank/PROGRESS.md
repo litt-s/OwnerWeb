@@ -92,6 +92,7 @@
 - Hero 下滑提示样式调整（`3.38`）：文案改为居中的红色 `SCROLL TO EXPLORE`，箭头移动到文字下方，并增加顶部间距使整体下移少许。
 - Hero 内容位置与 PCB 尺寸调整（`3.39`）：PCB 模型高度从约 `53vh` 增至 `57vh`，文字块改为向下留出少量间距；低高度桌面屏使用独立模型尺寸上限，保持首屏内容完整。
 - Hero PCB 与下滑提示错位（`3.40`）：PCB 视觉位置向下偏移少量，`SCROLL TO EXPLORE` 与动态箭头整体向上偏移，减少个人经历热点标注被遮挡的情况。
+- Hero 响应式双栏重构（`3.41`）：桌面端改为左侧文字、右侧 PCB 的布局，移除临时视觉位移；平板和移动端自动切回上下布局，并分别限制 PCB 尺寸，降低内容挤压和裁切风险。
 
 - 项目视频接入腾讯云 COS（`6.2`/`6.3`，待密钥验证）：新增 `worker/src/lib/cos.js`（COS PUT Object 预签名，HMAC-SHA1，签名 host）与接口 `POST /api/admin/projects/:id/video/sign`；后台项目编辑新增「上传视频到 COS」（XHR 直传 + 进度），上传后把 COS 直链写入 `video` 字段，保留手填外链；COS 配置（`COS_SECRET_ID`/`COS_SECRET_KEY`/`COS_BUCKET`/`COS_REGION`/`COS_VIDEO_PREFIX`/`COS_DOMAIN`）经 `.env.local` → `npm run config` 生成到 dev.vars/secrets；`DEPLOY.md` 增加 COS 控制台步骤（建桶公有读私有写、子账号密钥、CORS）。已 `wrangler secret bulk` + 部署 Worker。首次验证报 `403 SignatureDoesNotMatch`：经官方 `cos-nodejs-sdk-v5` 对齐确认**本项目签名与官方 SDK 逐字节一致**，判定为用户密钥不匹配；用户重填后本地 PUT/GET/DELETE 通过，但 Worker 仍 403——根因是误在 `worker/` 目录执行 `npm run config`（该目录无此脚本）导致 `.secrets.json` 未用新密钥重生成。在根目录重跑 `npm run config` → 上传 secrets → 部署后，端到端验证通过：**预签名 200 → 直传 200 → 公有读回读 200 → 删除 204**。
 
