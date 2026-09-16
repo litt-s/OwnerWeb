@@ -23,10 +23,11 @@ function Home() {
         const target = document.querySelector(location.state.scrollTo);
         if (!target) return;
 
+        const heading = target.querySelector('.section-head, .contact-title') || target;
         const nav = document.querySelector('.nav');
         const navBottom = nav?.getBoundingClientRect().bottom ?? 0;
         const gap = 16;
-        const top = target.getBoundingClientRect().top + window.scrollY - navBottom - gap;
+        const top = heading.getBoundingClientRect().top + window.scrollY - navBottom - gap;
 
         window.scrollTo({
           top: Math.max(0, top),
