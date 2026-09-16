@@ -429,7 +429,7 @@ ul {
   grid-area: model;
   width: 100%;
   max-width: 1440px;
-  height: clamp(360px, 68vh, 760px);
+  height: clamp(400px, 74vh, 820px);
   margin: 0 auto 4px;
 }
 .hero-veil {
@@ -458,11 +458,12 @@ ul {
   gap: clamp(32px, 5vw, 96px);
 }
 .hero-text {
-  position: relative;
-  z-index: 2;
   grid-area: text;
   max-width: 620px;
   text-align: left;
+}
+.hero-title .t-line {
+  display: block;
 }
 .mcu-wrap {
   position: relative;
@@ -540,6 +541,9 @@ ul {
   margin-inline: 0;
 }
 .hero-scroll-hint {
+  position: absolute;
+  left: var(--pad);
+  bottom: clamp(24px, 4vh, 56px);
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -2264,6 +2268,7 @@ iframe.editor-video-preview {
     margin-inline: auto;
   }
   .hero-scroll-hint {
+    position: static;
     align-items: center;
     text-align: center;
   }
