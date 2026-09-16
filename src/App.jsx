@@ -19,9 +19,20 @@ function Home() {
   const location = useLocation();
   useEffect(() => {
     if (location.state?.scrollTo) {
-      requestAnimationFrame(() =>
-        document.querySelector(location.state.scrollTo)?.scrollIntoView({ behavior: 'smooth' })
-      );
+      requestAnimationFrame(() => {
+        const target = document.querySelector(location.state.scrollTo);
+        if (!target) return;
+
+        const nav = document.querySelector('.nav');
+        const navBottom = nav?.getBoundingClientRect().bottom ?? 0;
+        const gap = 16;
+        const top = target.getBoundingClientRect().top + window.scrollY - navBottom - gap;
+
+        window.scrollTo({
+          top: Math.max(0, top),
+          behavior: 'smooth',
+        });
+      });
     }
   }, [location.state]);
 
