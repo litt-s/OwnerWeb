@@ -33,6 +33,10 @@ export default function Hero() {
             <span className="t-line accent">{hero.headSecond}</span>
           </h1>
           <p className="hero-sub">{hero.sub}</p>
+          <a className="hero-scroll-hint" href="#experience" aria-label="向下滑动查看更多内容">
+            <span className="hero-scroll-arrow" aria-hidden="true" />
+            <span>向下滑动查看更多</span>
+          </a>
         </div>
 
         {/* 窄屏下 3D 标注会隐藏，这里提供等价的按钮导航 */}
