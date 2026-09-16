@@ -428,7 +428,7 @@ ul {
   z-index: 2;
   width: 100%;
   max-width: 1440px;
-  height: clamp(320px, 53vh, 620px);
+  height: clamp(340px, 57vh, 680px);
   margin: 0 auto 4px;
 }
 .hero-veil {
@@ -458,7 +458,7 @@ ul {
 .hero-text {
   position: relative;
   z-index: 2;
-  margin-top: clamp(-24px, -2vh, -10px);
+  margin-top: clamp(0px, 1.5vh, 16px);
 }
 .mcu-wrap {
   position: relative;
@@ -2273,7 +2273,7 @@ iframe.editor-video-preview {
 
 @media (max-height: 680px) and (min-width: 681px) {
   .hero-model {
-    height: clamp(280px, 45vh, 420px);
+    height: clamp(300px, 49vh, 460px);
   }
   .hero-inner {
     padding-top: 28px;
