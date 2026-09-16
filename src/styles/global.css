@@ -85,7 +85,7 @@ ul {
 
 .section {
   position: relative;
-  padding-block: clamp(64px, 7vw, 112px);
+  padding-block: clamp(48px, 5vw, 88px);
 }
 #experience,
 #projects,
@@ -414,6 +414,7 @@ ul {
 .hero {
   position: relative;
   min-height: 100svh;
+  height: 100svh;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -427,7 +428,7 @@ ul {
   z-index: 2;
   width: 100%;
   max-width: 1440px;
-  height: clamp(540px, 66vh, 820px);
+  height: clamp(320px, 53vh, 620px);
   margin: 0 auto 4px;
 }
 .hero-veil {
@@ -447,8 +448,8 @@ ul {
   width: 100%;
   max-width: var(--container);
   padding-inline: var(--pad);
-  padding-top: clamp(64px, 9vh, 120px);
-  padding-bottom: 96px;
+  padding-top: clamp(36px, 6vh, 72px);
+  padding-bottom: clamp(24px, 4vh, 56px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -457,7 +458,7 @@ ul {
 .hero-text {
   position: relative;
   z-index: 2;
-  margin-top: -14px;
+  margin-top: clamp(-24px, -2vh, -10px);
 }
 .mcu-wrap {
   position: relative;
@@ -519,7 +520,7 @@ ul {
 }
 .t-line {
   display: inline;
-  font-size: clamp(38px, 6.3vw, 116px);
+  font-size: clamp(38px, 5vw, 88px);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -528,7 +529,7 @@ ul {
   font-weight: 700;
 }
 .hero-sub {
-  margin-top: 36px;
+  margin-top: 24px;
   max-width: 620px;
   font-size: clamp(16px, 1.6vw, 20px);
   color: var(--text-dim);
@@ -2224,6 +2225,22 @@ iframe.editor-video-preview {
   }
   .nav-links {
     display: none;
+  }
+}
+
+@media (max-height: 680px) and (min-width: 681px) {
+  .hero-model {
+    height: clamp(280px, 45vh, 420px);
+  }
+  .hero-inner {
+    padding-top: 28px;
+    padding-bottom: 20px;
+  }
+  .t-line {
+    font-size: clamp(34px, 4.6vw, 72px);
+  }
+  .hero-sub {
+    margin-top: 16px;
   }
 }
 
