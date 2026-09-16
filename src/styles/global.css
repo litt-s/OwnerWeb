@@ -430,6 +430,7 @@ ul {
   max-width: 1440px;
   height: clamp(340px, 57vh, 680px);
   margin: 0 auto 4px;
+  transform: translateY(clamp(8px, 1.2vh, 16px));
 }
 .hero-veil {
   position: absolute;
@@ -546,6 +547,7 @@ ul {
   letter-spacing: 0.16em;
   color: var(--accent);
   text-align: center;
+  transform: translateY(-6px);
   transition: color 0.25s ease;
 }
 .hero-scroll-hint:hover {
