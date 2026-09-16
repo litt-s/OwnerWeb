@@ -34,8 +34,8 @@ export default function Hero() {
           </h1>
           <p className="hero-sub">{hero.sub}</p>
           <a className="hero-scroll-hint" href="#experience" aria-label="向下滑动查看更多内容">
+            <span>SCROLL TO EXPLORE</span>
             <span className="hero-scroll-arrow" aria-hidden="true" />
-            <span>向下滑动查看更多</span>
           </a>
         </div>
 
