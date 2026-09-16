@@ -85,7 +85,7 @@ ul {
 
 .section {
   position: relative;
-  padding-block: clamp(96px, 12vw, 180px);
+  padding-block: clamp(64px, 7vw, 112px);
 }
 #experience,
 #projects,
