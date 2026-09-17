@@ -239,6 +239,7 @@ function McuModel({ dragRef, onHover, goTo }) {
   const usbRef = useRef();
   const buzzerRef = useRef();
   const guideRef = useRef();
+  const calloutRef = useRef();
 
   const tex = useMemo(
     () => ({
@@ -347,7 +348,7 @@ function McuModel({ dragRef, onHover, goTo }) {
 
   // lx/lz 为标签中心；把标签放在线段末端圆圈之外，避免与圆圈重叠
   const callouts = [
-    { label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-4.675, 0, -8.6, 0, 1.122) },
+    { label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-4.55, 0, -8.6, 0, 1.122) },
     { label: tex.labels.experience, lx: 0, lz: -5.5, line: lineBetween(0, -3.498, 0, -4.7, 1.232) },
     { label: tex.labels.strengths, lx: 10.3, lz: -1.3, line: lineBetween(4.978, -1.3, 8.6, -1.3, 1.045) },
     { label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(6.628, 2.15, 8.6, 2.0, 1.155) },
@@ -380,7 +381,9 @@ function McuModel({ dragRef, onHover, goTo }) {
     const d = dragRef.current;
     const model = modelRef.current;
     const float = floatRef.current;
-    if (guideRef.current) guideRef.current.visible = Math.cos(d.rotY) > 0.15;
+    const showFrontAnnotations = Math.cos(d.rotY) > 0.15;
+    if (guideRef.current) guideRef.current.visible = showFrontAnnotations;
+    if (calloutRef.current) calloutRef.current.visible = showFrontAnnotations;
 
     if (model) {
       if (!d.dragging) {
@@ -418,7 +421,7 @@ function McuModel({ dragRef, onHover, goTo }) {
     <group ref={modelRef} position={[0, -0.5, 0]}>
       <group ref={floatRef}>
         {/* stood-up board, leaning back toward viewer */}
-        <group rotation={[Math.PI / 2 - 0.34, 0, 0]}>
+        <group ref={calloutRef} rotation={[Math.PI / 2 - 0.34, 0, 0]}>
           <group scale={1.1}>
           {/* PCB base */}
           <mesh position={[0, 0, 0]}>
