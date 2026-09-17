@@ -426,7 +426,7 @@ function McuModel({ dragRef, onHover, goTo }) {
           {/* PCB base */}
           <mesh position={[0, 0, 0]}>
             <boxGeometry args={[11.6, 0.38, 6.0]} />
-            <meshStandardMaterial color="#171717" metalness={0.4} roughness={0.6} />
+            <meshBasicMaterial color="#202a32" side={THREE.DoubleSide} />
           </mesh>
           {/* silk-screen face */}
           <mesh position={[0, 0.21, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -435,7 +435,7 @@ function McuModel({ dragRef, onHover, goTo }) {
           </mesh>
           <mesh position={[0, -0.21, 0]} rotation={[Math.PI / 2, 0, 0]}>
             <planeGeometry args={[11.6, 6.0]} />
-            <meshStandardMaterial color="#171717" metalness={0.25} roughness={0.72} side={THREE.DoubleSide} />
+            <meshBasicMaterial color="#202a32" side={THREE.DoubleSide} />
           </mesh>
 
           {/* mounting holes */}
