@@ -421,7 +421,7 @@ function McuModel({ dragRef, onHover, goTo }) {
     <group ref={modelRef} position={[0, -0.5, 0]}>
       <group ref={floatRef}>
         {/* stood-up board, leaning back toward viewer */}
-        <group ref={calloutRef} rotation={[Math.PI / 2 - 0.34, 0, 0]}>
+        <group rotation={[Math.PI / 2 - 0.34, 0, 0]}>
           <group scale={1.1}>
           {/* PCB base */}
           <mesh position={[0, 0, 0]}>
@@ -622,7 +622,7 @@ function McuModel({ dragRef, onHover, goTo }) {
 
         </group>
         {/* front-facing floating leader lines and labels；窄屏隐藏标注避免裁切 */}
-        <group rotation={[Math.PI / 2 - 0.34, 0, 0]}>
+        <group ref={calloutRef} rotation={[Math.PI / 2 - 0.34, 0, 0]}>
           {!narrow && callouts.map((c, ci) => (
             <group key={ci}>
               <mesh position={c.line.mid} rotation={[0, c.line.angle, 0]}>
