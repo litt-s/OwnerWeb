@@ -18,6 +18,7 @@ export default function ThinkingDots({
   baseAlpha = 0.12,
   glowRadius = 90,
   dpr = 1.5,
+  className = '',
 }) {
   const ref = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0, strength: 0, inside: false });
@@ -115,7 +116,7 @@ export default function ThinkingDots({
   }, [color, colorDark, spacing, size, maxSize, opacity, baseAlpha, glowRadius, dpr]);
 
   return (
-    <div className="thinking-dots-container">
+    <div className={`thinking-dots-container ${className}`.trim()}>
       <canvas ref={ref} className="thinking-dots-canvas" />
     </div>
   );

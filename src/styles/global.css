@@ -26,6 +26,20 @@
   box-sizing: border-box;
 }
 
+.app-shell {
+  position: relative;
+  min-height: 100svh;
+}
+.app-content {
+  position: relative;
+  z-index: 1;
+}
+.thinking-dots-global {
+  position: fixed;
+  z-index: 0;
+  opacity: 0.34;
+}
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 96px;

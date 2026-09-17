@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import Aurora from './Aurora';
+import ScrambleText from './ScrambleText';
 import { useContent } from '../context/ContentContext';
 
 const MCU3D = lazy(() => import('./MCU3D'));
@@ -29,8 +30,8 @@ export default function Hero() {
 
         <div className="hero-text">
           <h1 className="hero-title">
-            <span className="t-line">{hero.headFirst}，</span>
-            <span className="t-line accent">{hero.headSecond}</span>
+            <span className="t-line"><ScrambleText text={`${hero.headFirst}，`} /></span>
+            <span className="t-line accent"><ScrambleText text={hero.headSecond} /></span>
           </h1>
           <p className="hero-sub">{hero.sub}</p>
           <a className="hero-scroll-hint" href="#experience" aria-label="向下滑动查看更多内容">
