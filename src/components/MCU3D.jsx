@@ -668,7 +668,7 @@ function McuModel({ dragRef, onHover, goTo }) {
         {/* front-facing floating leader lines and labels；窄屏隐藏标注避免裁切 */}
         <group ref={calloutRef} rotation={[Math.PI / 2 - 0.34, 0, 0]}>
           {!narrow && callouts.map((c, ci) => (
-            <group key={ci} ref={(node) => { calloutRefs.current[c.key] = node; }}>
+            <group key={ci} ref={(node) => { calloutRefs.current[c.key] = node; }} {...bind(c.key)}>
               <mesh position={c.line.mid} rotation={[0, c.line.angle, 0]}>
                 <boxGeometry args={[0.03, 0.02, c.line.len]} />
                 <meshBasicMaterial color="#ffffff" transparent opacity={0.9} depthWrite={false} blending={THREE.AdditiveBlending} />

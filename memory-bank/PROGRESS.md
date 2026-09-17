@@ -108,6 +108,7 @@
 - PCB 提示层常驻前方（`3.55`）：移除对 `calloutRef` 的背面可见性控制，提示文字和引导线在 PCB 任意旋转角度下保持显示；仅白色虚线框按正面状态隐藏。
 - PCB 标注深度修复（`3.56`）：恢复引导线、端点和提示文字的默认深度测试，避免它们穿透 PCB 背面底板显示。
 - PCB 热点标注悬浮联动（`3.57`）：为每个热点建立独立虚线框和引导线引用，悬浮时同步放大至 `1.08x`、提高透明度并启用 `AdditiveBlending`，形成高亮发光效果。
+- PCB 提示层交互联动（`3.58`）：复用热点 `bind()` 事件，使提示文字和引导线悬浮时触发同样高亮效果，点击后执行与 PCB 按钮一致的页面或区块跳转。
 - PCB 背面标注隐藏与精选项目连线修复（`3.51`）：正面虚线框、引导线和提示文字统一使用同一可见性状态，转到背面时全部隐藏；精选项目引线起点调整到虚线框内侧，消除连接间隙。
 
 - 项目视频接入腾讯云 COS（`6.2`/`6.3`，待密钥验证）：新增 `worker/src/lib/cos.js`（COS PUT Object 预签名，HMAC-SHA1，签名 host）与接口 `POST /api/admin/projects/:id/video/sign`；后台项目编辑新增「上传视频到 COS」（XHR 直传 + 进度），上传后把 COS 直链写入 `video` 字段，保留手填外链；COS 配置（`COS_SECRET_ID`/`COS_SECRET_KEY`/`COS_BUCKET`/`COS_REGION`/`COS_VIDEO_PREFIX`/`COS_DOMAIN`）经 `.env.local` → `npm run config` 生成到 dev.vars/secrets；`DEPLOY.md` 增加 COS 控制台步骤（建桶公有读私有写、子账号密钥、CORS）。已 `wrangler secret bulk` + 部署 Worker。首次验证报 `403 SignatureDoesNotMatch`：经官方 `cos-nodejs-sdk-v5` 对齐确认**本项目签名与官方 SDK 逐字节一致**，判定为用户密钥不匹配；用户重填后本地 PUT/GET/DELETE 通过，但 Worker 仍 403——根因是误在 `worker/` 目录执行 `npm run config`（该目录无此脚本）导致 `.secrets.json` 未用新密钥重生成。在根目录重跑 `npm run config` → 上传 secrets → 部署后，端到端验证通过：**预签名 200 → 直传 200 → 公有读回读 200 → 删除 204**。
