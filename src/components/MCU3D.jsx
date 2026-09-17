@@ -351,7 +351,7 @@ function McuModel({ dragRef, onHover, goTo }) {
     { label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-4.55, 0, -8.6, 0, 1.122) },
     { label: tex.labels.experience, lx: 0, lz: -5.5, line: lineBetween(0, -3.498, 0, -4.7, 1.232) },
     { label: tex.labels.strengths, lx: 10.3, lz: -1.3, line: lineBetween(4.978, -1.3, 8.6, -1.3, 1.045) },
-    { label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(6.628, 2.15, 8.6, 2.0, 1.155) },
+    { label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(6.628, 2.15, 8.6, 2.15, 1.155) },
     { label: tex.labels.comments, lx: -10.3, lz: 1.6, line: lineBetween(-5.775, 1.6, -8.6, 1.6, 1.155) },
   ];
 
@@ -426,12 +426,16 @@ function McuModel({ dragRef, onHover, goTo }) {
           {/* PCB base */}
           <mesh position={[0, 0, 0]}>
             <boxGeometry args={[11.6, 0.38, 6.0]} />
-            <meshStandardMaterial color="#0d0d0d" metalness={0.4} roughness={0.6} />
+            <meshStandardMaterial color="#171717" metalness={0.4} roughness={0.6} />
           </mesh>
           {/* silk-screen face */}
           <mesh position={[0, 0.21, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <planeGeometry args={[11.6, 6.0]} />
             <meshStandardMaterial map={tex.board} color="#ffffff" metalness={0.3} roughness={0.6} />
+          </mesh>
+          <mesh position={[0, -0.21, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[11.6, 6.0]} />
+            <meshStandardMaterial color="#171717" metalness={0.25} roughness={0.72} side={THREE.DoubleSide} />
           </mesh>
 
           {/* mounting holes */}

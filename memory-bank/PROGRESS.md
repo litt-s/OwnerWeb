@@ -102,6 +102,7 @@
 - PCB 容器与引线连接调整（`3.48`）：桌面端模型容器向左扩展 `10px`；重新计算精选项目、个人经历、个人优势、联系我和访客留言五组引导线起点，使其连接到对应白色虚线框边缘；窄屏恢复原容器尺寸。
 - PCB 标注悬浮层统一（`3.49`）：整体模型缩放调整为 `1.1x`，相机取景宽度调整为 `27` 为旋转预留边界；白色虚线框、引导线、端点和文字统一到各自悬浮高度，并关闭深度测试避免层级错位。
 - PCB 正面标注层修复（`3.50`）：引导线和提示文字移出动态旋转层并固定在前方，PCB 转到背面时仅隐藏正面白色虚线框；按 `1.1x` 缩放重新计算五组连接点，标题顶部间距增加到 `50px`。
+- PCB 背面与联系我引线调整（`3.52`）：为 PCB 增加独立深色背面底板材质，避免转到背面后与背景融为一体；将「联系我」引导线的起终点统一为同一水平坐标。
 - PCB 背面标注隐藏与精选项目连线修复（`3.51`）：正面虚线框、引导线和提示文字统一使用同一可见性状态，转到背面时全部隐藏；精选项目引线起点调整到虚线框内侧，消除连接间隙。
 
 - 项目视频接入腾讯云 COS（`6.2`/`6.3`，待密钥验证）：新增 `worker/src/lib/cos.js`（COS PUT Object 预签名，HMAC-SHA1，签名 host）与接口 `POST /api/admin/projects/:id/video/sign`；后台项目编辑新增「上传视频到 COS」（XHR 直传 + 进度），上传后把 COS 直链写入 `video` 字段，保留手填外链；COS 配置（`COS_SECRET_ID`/`COS_SECRET_KEY`/`COS_BUCKET`/`COS_REGION`/`COS_VIDEO_PREFIX`/`COS_DOMAIN`）经 `.env.local` → `npm run config` 生成到 dev.vars/secrets；`DEPLOY.md` 增加 COS 控制台步骤（建桶公有读私有写、子账号密钥、CORS）。已 `wrangler secret bulk` + 部署 Worker。首次验证报 `403 SignatureDoesNotMatch`：经官方 `cos-nodejs-sdk-v5` 对齐确认**本项目签名与官方 SDK 逐字节一致**，判定为用户密钥不匹配；用户重填后本地 PUT/GET/DELETE 通过，但 Worker 仍 403——根因是误在 `worker/` 目录执行 `npm run config`（该目录无此脚本）导致 `.secrets.json` 未用新密钥重生成。在根目录重跑 `npm run config` → 上传 secrets → 部署后，端到端验证通过：**预签名 200 → 直传 200 → 公有读回读 200 → 删除 204**。
