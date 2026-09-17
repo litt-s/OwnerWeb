@@ -213,7 +213,7 @@ function ResponsiveCamera() {
     const aspect = size.width / Math.max(1, size.height);
     const fov = (camera.fov * Math.PI) / 180;
     // 取景宽度要留出余量：拖动旋转时两侧标注会向外摆，太窄会被画布边缘裁掉
-    const targetWidth = aspect < 1.3 ? 15 : 24;
+    const targetWidth = aspect < 1.3 ? 15 : 27;
     const z = targetWidth / (2 * Math.tan(fov / 2) * aspect);
     camera.position.z = Math.max(16, Math.min(46, z));
     camera.position.y = camera.position.z * 0.08;
@@ -325,7 +325,7 @@ function McuModel({ dragRef, onHover, goTo }) {
     []
   );
 
-  const lineBetween = (x0, z0, x1, z1) => {
+  const lineBetween = (x0, z0, x1, z1, y) => {
     const dx = x1 - x0;
     const dz = z1 - z0;
     const total = Math.hypot(dx, dz);
@@ -337,19 +337,20 @@ function McuModel({ dragRef, onHover, goTo }) {
     return {
       start: [x0, z0],
       end: [x1, z1],
-      mid: [(x0 + ex) / 2, 0.22, (z0 + ez) / 2],
+      mid: [(x0 + ex) / 2, y, (z0 + ez) / 2],
       angle: Math.atan2(dx, dz),
       len: total - cut,
+      y,
     };
   };
 
   // lx/lz 为标签中心；把标签放在线段末端圆圈之外，避免与圆圈重叠
   const callouts = [
-    { label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-5.1, 0, -8.6, 0) },
-    { label: tex.labels.experience, lx: 0, lz: -5.5, line: lineBetween(0, -3.82, 0, -4.7) },
-    { label: tex.labels.strengths, lx: 10.3, lz: -1.3, line: lineBetween(5.43, -1.3, 8.6, -1.3) },
-    { label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(7.23, 2.15, 8.6, 2.0) },
-    { label: tex.labels.comments, lx: -10.3, lz: 1.6, line: lineBetween(-6.3, 1.6, -8.6, 1.6) },
+    { label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-5.1, 0, -8.6, 0, 1.224) },
+    { label: tex.labels.experience, lx: 0, lz: -5.5, line: lineBetween(0, -3.82, 0, -4.7, 1.344) },
+    { label: tex.labels.strengths, lx: 10.3, lz: -1.3, line: lineBetween(5.43, -1.3, 8.6, -1.3, 1.14) },
+    { label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(7.23, 2.15, 8.6, 2.0, 1.26) },
+    { label: tex.labels.comments, lx: -10.3, lz: 1.6, line: lineBetween(-6.3, 1.6, -8.6, 1.6, 1.26) },
   ];
 
   const bind = (key) => ({
@@ -416,7 +417,7 @@ function McuModel({ dragRef, onHover, goTo }) {
       <group ref={floatRef}>
         {/* stood-up board, leaning back toward viewer */}
         <group rotation={[Math.PI / 2 - 0.34, 0, 0]}>
-          <group scale={1.2}>
+          <group scale={1.1}>
           {/* PCB base */}
           <mesh position={[0, 0, 0]}>
             <boxGeometry args={[11.6, 0.38, 6.0]} />
@@ -603,7 +604,7 @@ function McuModel({ dragRef, onHover, goTo }) {
           ].map((g, i) => (
             <mesh key={i} position={[g.x, g.y, g.z]} rotation={[-Math.PI / 2, 0, 0]}>
               <planeGeometry args={[g.w, g.h]} />
-              <meshBasicMaterial map={g.sharp ? tex.guideSharp : tex.guide} transparent opacity={0.9} depthWrite={false} side={THREE.DoubleSide} />
+              <meshBasicMaterial map={g.sharp ? tex.guideSharp : tex.guide} transparent opacity={0.9} depthWrite={false} depthTest={false} side={THREE.DoubleSide} />
             </mesh>
           ))}
           </group>
@@ -615,15 +616,15 @@ function McuModel({ dragRef, onHover, goTo }) {
                 <boxGeometry args={[0.03, 0.02, c.line.len]} />
                 <meshBasicMaterial color="#ffffff" transparent opacity={0.9} depthWrite={false} depthTest={false} />
               </mesh>
-              <mesh position={[c.line.start[0], 0.24, c.line.start[1]]}>
+              <mesh position={[c.line.start[0], c.line.y, c.line.start[1]]}>
                 <boxGeometry args={[0.12, 0.03, 0.12]} />
                 <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} depthTest={false} />
               </mesh>
-              <mesh position={[c.line.end[0], 0.22, c.line.end[1]]} rotation={[-Math.PI / 2, 0, 0]}>
+              <mesh position={[c.line.end[0], c.line.y, c.line.end[1]]} rotation={[-Math.PI / 2, 0, 0]}>
                 <ringGeometry args={[0.08, 0.13, 24]} />
                 <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} depthTest={false} side={THREE.DoubleSide} />
               </mesh>
-              <mesh position={[c.lx, 0.22, c.lz]} rotation={[-Math.PI / 2, 0, 0]}>
+              <mesh position={[c.lx, c.line.y, c.lz]} rotation={[-Math.PI / 2, 0, 0]}>
                 <planeGeometry args={[3.8, 0.9]} />
                 <meshBasicMaterial map={c.label} transparent depthWrite={false} depthTest={false} side={THREE.DoubleSide} />
               </mesh>
