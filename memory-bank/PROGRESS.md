@@ -96,6 +96,7 @@
 - Hero 标题与提示布局调整（`3.42`）：标题前后段分别独占一行，桌面端 PCB 高度上限提高并保持右侧主视觉；下滑提示定位到 Hero 左下方，窄屏保持正常内容流。
 - PCB 本体与标题对齐修复（`3.43`）：将桌面端 Three.js 相机取景宽度从 `32` 收紧到 `24`，放大 PCB 本体而不扩大画布；桌面端标题改为顶部独立对齐，避免受模型高度影响下移。
 - Hero 标题与 PCB 二次微调（`3.44`）：桌面端标题下移 `10px`；Three.js 相机取景宽度从 `24` 调整为 `18`，继续放大 PCB 本体并保留热点标注安全边界。
+- Hero 标题与提示重叠修复（`3.45`）：将桌面端 Three.js 相机取景宽度从 `18` 调回 `22`，恢复热点文字可见；左侧文字区增加顶部和底部布局空间，替代不稳定的 transform 位移，避免标题与下滑提示重叠。
 
 - 项目视频接入腾讯云 COS（`6.2`/`6.3`，待密钥验证）：新增 `worker/src/lib/cos.js`（COS PUT Object 预签名，HMAC-SHA1，签名 host）与接口 `POST /api/admin/projects/:id/video/sign`；后台项目编辑新增「上传视频到 COS」（XHR 直传 + 进度），上传后把 COS 直链写入 `video` 字段，保留手填外链；COS 配置（`COS_SECRET_ID`/`COS_SECRET_KEY`/`COS_BUCKET`/`COS_REGION`/`COS_VIDEO_PREFIX`/`COS_DOMAIN`）经 `.env.local` → `npm run config` 生成到 dev.vars/secrets；`DEPLOY.md` 增加 COS 控制台步骤（建桶公有读私有写、子账号密钥、CORS）。已 `wrangler secret bulk` + 部署 Worker。首次验证报 `403 SignatureDoesNotMatch`：经官方 `cos-nodejs-sdk-v5` 对齐确认**本项目签名与官方 SDK 逐字节一致**，判定为用户密钥不匹配；用户重填后本地 PUT/GET/DELETE 通过，但 Worker 仍 403——根因是误在 `worker/` 目录执行 `npm run config`（该目录无此脚本）导致 `.secrets.json` 未用新密钥重生成。在根目录重跑 `npm run config` → 上传 secrets → 部署后，端到端验证通过：**预签名 200 → 直传 200 → 公有读回读 200 → 删除 204**。
 
