@@ -240,6 +240,8 @@ function McuModel({ dragRef, onHover, goTo }) {
   const buzzerRef = useRef();
   const guideRef = useRef();
   const calloutRef = useRef();
+  const guideRefs = useRef({});
+  const calloutRefs = useRef({});
 
   const tex = useMemo(
     () => ({
@@ -348,11 +350,11 @@ function McuModel({ dragRef, onHover, goTo }) {
 
   // lx/lz 为标签中心；把标签放在线段末端圆圈之外，避免与圆圈重叠
   const callouts = [
-    { label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-4.55, 0, -8.6, 0, 1.122) },
-    { label: tex.labels.experience, lx: 0, lz: -5.5, line: lineBetween(0, -3.498, 0, -4.7, 1.232) },
-    { label: tex.labels.strengths, lx: 10.3, lz: -1.3, line: lineBetween(4.978, -1.3, 8.6, -1.3, 1.045) },
-    { label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(6.628, 2.15, 8.6, 2.15, 1.155) },
-    { label: tex.labels.comments, lx: -10.3, lz: 1.6, line: lineBetween(-5.775, 1.6, -8.6, 1.6, 1.155) },
+    { key: 'chip', label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-4.55, 0, -8.6, 0, 1.122) },
+    { key: 'headers', label: tex.labels.experience, lx: 0, lz: -5.5, line: lineBetween(0, -3.498, 0, -4.7, 1.232) },
+    { key: 'crystal', label: tex.labels.strengths, lx: 10.3, lz: -1.3, line: lineBetween(4.978, -1.3, 8.6, -1.3, 1.045) },
+    { key: 'usb', label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(6.628, 2.15, 8.6, 2.15, 1.155) },
+    { key: 'buzzer', label: tex.labels.comments, lx: -10.3, lz: 1.6, line: lineBetween(-5.775, 1.6, -8.6, 1.6, 1.155) },
   ];
 
   const bind = (key) => ({
@@ -413,6 +415,44 @@ function McuModel({ dragRef, onHover, goTo }) {
       g.scale.x += (want - g.scale.x) * 0.12;
       g.scale.y += (want - g.scale.y) * 0.12;
       g.scale.z += (want - g.scale.z) * 0.12;
+    }
+
+    for (const group of Object.values(guideRefs.current)) {
+      if (!group) continue;
+      const active = group.userData.hotspot === hover;
+      const want = active ? 1.08 : 1;
+      group.scale.x += (want - group.scale.x) * 0.14;
+      group.scale.y += (want - group.scale.y) * 0.14;
+      group.scale.z += (want - group.scale.z) * 0.14;
+      group.traverse((node) => {
+        if (!node.material) return;
+        const materials = Array.isArray(node.material) ? node.material : [node.material];
+        materials.forEach((material) => {
+          if (typeof material.opacity === 'number') {
+            const target = active ? 1 : 0.9;
+            material.opacity += (target - material.opacity) * 0.14;
+          }
+        });
+      });
+    }
+
+    for (const [key, group] of Object.entries(calloutRefs.current)) {
+      if (!group) continue;
+      const active = key === hover;
+      const want = active ? 1.08 : 1;
+      group.scale.x += (want - group.scale.x) * 0.14;
+      group.scale.y += (want - group.scale.y) * 0.14;
+      group.scale.z += (want - group.scale.z) * 0.14;
+      group.traverse((node) => {
+        if (!node.material) return;
+        const materials = Array.isArray(node.material) ? node.material : [node.material];
+        materials.forEach((material) => {
+          if (typeof material.opacity === 'number') {
+            const target = active ? 1 : 0.9;
+            material.opacity += (target - material.opacity) * 0.14;
+          }
+        });
+      });
     }
   });
 
@@ -604,17 +644,22 @@ function McuModel({ dragRef, onHover, goTo }) {
           {/* persistent white guide outlines (clickable regions) */}
           <group ref={guideRef}>
           {[
-            { x: CHIP_X, y: 1.02, z: 0, w: 3.3, h: 3.3, sharp: false },
-            { x: 0, y: 1.12, z: 2.72, w: 10.8, h: 0.92, sharp: true },
-            { x: 0, y: 1.12, z: -2.72, w: 10.8, h: 0.92, sharp: true },
-            { x: 3.9, y: 0.95, z: -1.3, w: 1.25, h: 1.25, sharp: false },
-            { x: 5.45, y: 1.05, z: 2.15, w: 1.15, h: 1.6, sharp: false },
-            { x: -4.6, y: 1.05, z: 1.6, w: 1.3, h: 1.3, sharp: false },
+            { id: 'chip', hotspot: 'chip', x: CHIP_X, y: 1.02, z: 0, w: 3.3, h: 3.3, sharp: false },
+            { id: 'headers-top', hotspot: 'headers', x: 0, y: 1.12, z: 2.72, w: 10.8, h: 0.92, sharp: true },
+            { id: 'headers-bottom', hotspot: 'headers', x: 0, y: 1.12, z: -2.72, w: 10.8, h: 0.92, sharp: true },
+            { id: 'crystal', hotspot: 'crystal', x: 3.9, y: 0.95, z: -1.3, w: 1.25, h: 1.25, sharp: false },
+            { id: 'usb', hotspot: 'usb', x: 5.45, y: 1.05, z: 2.15, w: 1.15, h: 1.6, sharp: false },
+            { id: 'buzzer', hotspot: 'buzzer', x: -4.6, y: 1.05, z: 1.6, w: 1.3, h: 1.3, sharp: false },
           ].map((g, i) => (
-            <mesh key={i} position={[g.x, g.y, g.z]} rotation={[-Math.PI / 2, 0, 0]}>
+            <group key={g.id} ref={(node) => {
+              if (node) node.userData.hotspot = g.hotspot;
+              guideRefs.current[g.id] = node;
+            }}>
+            <mesh position={[g.x, g.y, g.z]} rotation={[-Math.PI / 2, 0, 0]}>
               <planeGeometry args={[g.w, g.h]} />
-              <meshBasicMaterial map={g.sharp ? tex.guideSharp : tex.guide} transparent opacity={0.9} depthWrite={false} depthTest={false} side={THREE.DoubleSide} />
+              <meshBasicMaterial map={g.sharp ? tex.guideSharp : tex.guide} transparent opacity={0.9} depthWrite={false} depthTest={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
             </mesh>
+            </group>
           ))}
           </group>
           </group>
@@ -623,22 +668,22 @@ function McuModel({ dragRef, onHover, goTo }) {
         {/* front-facing floating leader lines and labels；窄屏隐藏标注避免裁切 */}
         <group ref={calloutRef} rotation={[Math.PI / 2 - 0.34, 0, 0]}>
           {!narrow && callouts.map((c, ci) => (
-            <group key={ci}>
+            <group key={ci} ref={(node) => { calloutRefs.current[c.key] = node; }}>
               <mesh position={c.line.mid} rotation={[0, c.line.angle, 0]}>
                 <boxGeometry args={[0.03, 0.02, c.line.len]} />
-                <meshBasicMaterial color="#ffffff" transparent opacity={0.9} depthWrite={false} />
+                <meshBasicMaterial color="#ffffff" transparent opacity={0.9} depthWrite={false} blending={THREE.AdditiveBlending} />
               </mesh>
               <mesh position={[c.line.start[0], c.line.y, c.line.start[1]]}>
                 <boxGeometry args={[0.12, 0.03, 0.12]} />
-                <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} />
+                <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} blending={THREE.AdditiveBlending} />
               </mesh>
               <mesh position={[c.line.end[0], c.line.y, c.line.end[1]]} rotation={[-Math.PI / 2, 0, 0]}>
                 <ringGeometry args={[0.08, 0.13, 24]} />
-                <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} side={THREE.DoubleSide} />
+                <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
               </mesh>
               <mesh position={[c.lx, c.line.y, c.lz]} rotation={[-Math.PI / 2, 0, 0]}>
                 <planeGeometry args={[3.8, 0.9]} />
-                <meshBasicMaterial map={c.label} transparent depthWrite={false} side={THREE.DoubleSide} />
+                <meshBasicMaterial map={c.label} transparent depthWrite={false} blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
               </mesh>
             </group>
           ))}
