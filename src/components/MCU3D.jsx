@@ -238,6 +238,7 @@ function McuModel({ dragRef, onHover, goTo }) {
   const crystalRef = useRef();
   const usbRef = useRef();
   const buzzerRef = useRef();
+  const guideRef = useRef();
 
   const tex = useMemo(
     () => ({
@@ -346,11 +347,11 @@ function McuModel({ dragRef, onHover, goTo }) {
 
   // lx/lz 为标签中心；把标签放在线段末端圆圈之外，避免与圆圈重叠
   const callouts = [
-    { label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-5.1, 0, -8.6, 0, 1.224) },
-    { label: tex.labels.experience, lx: 0, lz: -5.5, line: lineBetween(0, -3.82, 0, -4.7, 1.344) },
-    { label: tex.labels.strengths, lx: 10.3, lz: -1.3, line: lineBetween(5.43, -1.3, 8.6, -1.3, 1.14) },
-    { label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(7.23, 2.15, 8.6, 2.0, 1.26) },
-    { label: tex.labels.comments, lx: -10.3, lz: 1.6, line: lineBetween(-6.3, 1.6, -8.6, 1.6, 1.26) },
+    { label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-4.675, 0, -8.6, 0, 1.122) },
+    { label: tex.labels.experience, lx: 0, lz: -5.5, line: lineBetween(0, -3.498, 0, -4.7, 1.232) },
+    { label: tex.labels.strengths, lx: 10.3, lz: -1.3, line: lineBetween(4.978, -1.3, 8.6, -1.3, 1.045) },
+    { label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(6.628, 2.15, 8.6, 2.0, 1.155) },
+    { label: tex.labels.comments, lx: -10.3, lz: 1.6, line: lineBetween(-5.775, 1.6, -8.6, 1.6, 1.155) },
   ];
 
   const bind = (key) => ({
@@ -379,6 +380,7 @@ function McuModel({ dragRef, onHover, goTo }) {
     const d = dragRef.current;
     const model = modelRef.current;
     const float = floatRef.current;
+    if (guideRef.current) guideRef.current.visible = Math.cos(d.rotY) > 0.15;
 
     if (model) {
       if (!d.dragging) {
@@ -594,6 +596,7 @@ function McuModel({ dragRef, onHover, goTo }) {
           </mesh>
 
           {/* persistent white guide outlines (clickable regions) */}
+          <group ref={guideRef}>
           {[
             { x: CHIP_X, y: 1.02, z: 0, w: 3.3, h: 3.3, sharp: false },
             { x: 0, y: 1.12, z: 2.72, w: 10.8, h: 0.92, sharp: true },
@@ -608,8 +611,11 @@ function McuModel({ dragRef, onHover, goTo }) {
             </mesh>
           ))}
           </group>
+          </group>
 
-          {/* solid leader lines + page labels (rotate with the board)；窄屏隐藏标注避免裁切 */}
+        </group>
+        {/* front-facing floating leader lines and labels；窄屏隐藏标注避免裁切 */}
+        <group rotation={[Math.PI / 2 - 0.34, 0, 0]}>
           {!narrow && callouts.map((c, ci) => (
             <group key={ci}>
               <mesh position={c.line.mid} rotation={[0, c.line.angle, 0]}>

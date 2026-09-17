@@ -462,7 +462,7 @@ ul {
   grid-area: text;
   max-width: 620px;
   align-self: start;
-  padding-top: 40px;
+  padding-top: 50px;
   padding-bottom: clamp(56px, 8vh, 96px);
   text-align: left;
 }
