@@ -626,19 +626,19 @@ function McuModel({ dragRef, onHover, goTo }) {
             <group key={ci}>
               <mesh position={c.line.mid} rotation={[0, c.line.angle, 0]}>
                 <boxGeometry args={[0.03, 0.02, c.line.len]} />
-                <meshBasicMaterial color="#ffffff" transparent opacity={0.9} depthWrite={false} depthTest={false} />
+                <meshBasicMaterial color="#ffffff" transparent opacity={0.9} depthWrite={false} />
               </mesh>
               <mesh position={[c.line.start[0], c.line.y, c.line.start[1]]}>
                 <boxGeometry args={[0.12, 0.03, 0.12]} />
-                <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} depthTest={false} />
+                <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} />
               </mesh>
               <mesh position={[c.line.end[0], c.line.y, c.line.end[1]]} rotation={[-Math.PI / 2, 0, 0]}>
                 <ringGeometry args={[0.08, 0.13, 24]} />
-                <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} depthTest={false} side={THREE.DoubleSide} />
+                <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} side={THREE.DoubleSide} />
               </mesh>
               <mesh position={[c.lx, c.line.y, c.lz]} rotation={[-Math.PI / 2, 0, 0]}>
                 <planeGeometry args={[3.8, 0.9]} />
-                <meshBasicMaterial map={c.label} transparent depthWrite={false} depthTest={false} side={THREE.DoubleSide} />
+                <meshBasicMaterial map={c.label} transparent depthWrite={false} side={THREE.DoubleSide} />
               </mesh>
             </group>
           ))}
