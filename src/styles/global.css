@@ -953,9 +953,12 @@ ul {
 .contact-list {
   margin-top: 32px;
   display: grid;
-  gap: 4px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 4px;
 }
 .contact-list li {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -981,8 +984,10 @@ ul {
   width: 84px;
 }
 .cl-value {
+  min-width: 0;
   font-size: 16px;
   color: var(--text);
+  overflow-wrap: anywhere;
   transition: color 0.2s ease;
 }
 a.cl-value:hover {
@@ -2338,6 +2343,9 @@ iframe.editor-video-preview {
     grid-template-columns: 1fr;
   }
   .exp-meta {
+    grid-template-columns: 1fr;
+  }
+  .contact-list {
     grid-template-columns: 1fr;
   }
   .contact-channels {
