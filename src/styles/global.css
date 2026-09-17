@@ -461,6 +461,7 @@ ul {
   grid-area: text;
   max-width: 620px;
   align-self: start;
+  transform: translateY(10px);
   text-align: left;
 }
 .hero-title .t-line {
@@ -2264,6 +2265,7 @@ iframe.editor-video-preview {
     order: 2;
     max-width: 680px;
     align-self: auto;
+    transform: none;
     text-align: center;
   }
   .hero-sub {
