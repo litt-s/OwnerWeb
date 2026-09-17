@@ -416,7 +416,7 @@ function McuModel({ dragRef, onHover, goTo }) {
       <group ref={floatRef}>
         {/* stood-up board, leaning back toward viewer */}
         <group rotation={[Math.PI / 2 - 0.34, 0, 0]}>
-          <group scale={1.35}>
+          <group scale={1.2}>
           {/* PCB base */}
           <mesh position={[0, 0, 0]}>
             <boxGeometry args={[11.6, 0.38, 6.0]} />
@@ -613,19 +613,19 @@ function McuModel({ dragRef, onHover, goTo }) {
             <group key={ci}>
               <mesh position={c.line.mid} rotation={[0, c.line.angle, 0]}>
                 <boxGeometry args={[0.03, 0.02, c.line.len]} />
-                <meshBasicMaterial color="#ffffff" transparent opacity={0.9} depthWrite={false} />
+                <meshBasicMaterial color="#ffffff" transparent opacity={0.9} depthWrite={false} depthTest={false} />
               </mesh>
               <mesh position={[c.line.start[0], 0.24, c.line.start[1]]}>
                 <boxGeometry args={[0.12, 0.03, 0.12]} />
-                <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} />
+                <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} depthTest={false} />
               </mesh>
               <mesh position={[c.line.end[0], 0.22, c.line.end[1]]} rotation={[-Math.PI / 2, 0, 0]}>
                 <ringGeometry args={[0.08, 0.13, 24]} />
-                <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} side={THREE.DoubleSide} />
+                <meshBasicMaterial color="#ffffff" transparent opacity={0.95} depthWrite={false} depthTest={false} side={THREE.DoubleSide} />
               </mesh>
               <mesh position={[c.lx, 0.22, c.lz]} rotation={[-Math.PI / 2, 0, 0]}>
-                <planeGeometry args={[2.9, 0.7]} />
-                <meshBasicMaterial map={c.label} transparent depthWrite={false} side={THREE.DoubleSide} />
+                <planeGeometry args={[3.8, 0.9]} />
+                <meshBasicMaterial map={c.label} transparent depthWrite={false} depthTest={false} side={THREE.DoubleSide} />
               </mesh>
             </group>
           ))}
