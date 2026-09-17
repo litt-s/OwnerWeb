@@ -430,7 +430,8 @@ ul {
   width: 100%;
   max-width: 1440px;
   height: clamp(400px, 74vh, 820px);
-  margin: 0 auto 4px;
+  width: calc(100% + 10px);
+  margin: 0 0 4px -10px;
 }
 .hero-veil {
   position: absolute;
@@ -2261,6 +2262,8 @@ iframe.editor-video-preview {
   .hero-model {
     order: 1;
     height: clamp(320px, 57vh, 620px);
+    width: 100%;
+    margin: 0 auto 4px;
   }
   .hero-text {
     order: 2;

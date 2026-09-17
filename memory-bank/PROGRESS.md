@@ -99,6 +99,7 @@
 - Hero 标题与提示重叠修复（`3.45`）：将桌面端 Three.js 相机取景宽度从 `18` 调回 `22`，恢复热点文字可见；左侧文字区增加顶部和底部布局空间，替代不稳定的 transform 位移，避免标题与下滑提示重叠。
 - PCB 本体与热点标注分层（`3.46`）：恢复相机取景宽度 `24`，仅对 PCB 本体、元件、可点击区域和板面引导框应用 `1.35x` 缩放，并重新调整五组热点引线起点；标题顶部间距增加到 `20px`。
 - PCB 标注可见性调整（`3.47`）：PCB 本体缩放从 `1.35x` 调整为 `1.2x`，热点文字平面从 `2.9 × 0.7` 放大为 `3.8 × 0.9`，引线和标注关闭深度测试避免被 PCB 遮挡；标题顶部间距增加到 `40px`。
+- PCB 容器与引线连接调整（`3.48`）：桌面端模型容器向左扩展 `10px`；重新计算精选项目、个人经历、个人优势、联系我和访客留言五组引导线起点，使其连接到对应白色虚线框边缘；窄屏恢复原容器尺寸。
 
 - 项目视频接入腾讯云 COS（`6.2`/`6.3`，待密钥验证）：新增 `worker/src/lib/cos.js`（COS PUT Object 预签名，HMAC-SHA1，签名 host）与接口 `POST /api/admin/projects/:id/video/sign`；后台项目编辑新增「上传视频到 COS」（XHR 直传 + 进度），上传后把 COS 直链写入 `video` 字段，保留手填外链；COS 配置（`COS_SECRET_ID`/`COS_SECRET_KEY`/`COS_BUCKET`/`COS_REGION`/`COS_VIDEO_PREFIX`/`COS_DOMAIN`）经 `.env.local` → `npm run config` 生成到 dev.vars/secrets；`DEPLOY.md` 增加 COS 控制台步骤（建桶公有读私有写、子账号密钥、CORS）。已 `wrangler secret bulk` + 部署 Worker。首次验证报 `403 SignatureDoesNotMatch`：经官方 `cos-nodejs-sdk-v5` 对齐确认**本项目签名与官方 SDK 逐字节一致**，判定为用户密钥不匹配；用户重填后本地 PUT/GET/DELETE 通过，但 Worker 仍 403——根因是误在 `worker/` 目录执行 `npm run config`（该目录无此脚本）导致 `.secrets.json` 未用新密钥重生成。在根目录重跑 `npm run config` → 上传 secrets → 部署后，端到端验证通过：**预签名 200 → 直传 200 → 公有读回读 200 → 删除 204**。
 

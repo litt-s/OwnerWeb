@@ -345,11 +345,11 @@ function McuModel({ dragRef, onHover, goTo }) {
 
   // lx/lz 为标签中心；把标签放在线段末端圆圈之外，避免与圆圈重叠
   const callouts = [
-    { label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-5.7, 0, -8.6, 0) },
-    { label: tex.labels.experience, lx: 0, lz: -5.5, line: lineBetween(0, -3.9, 0, -4.7) },
-    { label: tex.labels.strengths, lx: 10.3, lz: -1.3, line: lineBetween(6.1, -1.3, 8.6, -1.3) },
-    { label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(6.6, 2.0, 8.6, 2.0) },
-    { label: tex.labels.comments, lx: -10.3, lz: 1.6, line: lineBetween(-7.1, 1.6, -8.6, 1.6) },
+    { label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-5.1, 0, -8.6, 0) },
+    { label: tex.labels.experience, lx: 0, lz: -5.5, line: lineBetween(0, -3.82, 0, -4.7) },
+    { label: tex.labels.strengths, lx: 10.3, lz: -1.3, line: lineBetween(5.43, -1.3, 8.6, -1.3) },
+    { label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(7.23, 2.15, 8.6, 2.0) },
+    { label: tex.labels.comments, lx: -10.3, lz: 1.6, line: lineBetween(-6.3, 1.6, -8.6, 1.6) },
   ];
 
   const bind = (key) => ({
