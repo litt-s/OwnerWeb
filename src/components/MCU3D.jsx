@@ -213,7 +213,7 @@ function ResponsiveCamera() {
     const aspect = size.width / Math.max(1, size.height);
     const fov = (camera.fov * Math.PI) / 180;
     // 取景宽度要留出余量：拖动旋转时两侧标注会向外摆，太窄会被画布边缘裁掉
-    const targetWidth = aspect < 1.3 ? 15 : 32;
+    const targetWidth = aspect < 1.3 ? 15 : 24;
     const z = targetWidth / (2 * Math.tan(fov / 2) * aspect);
     camera.position.z = Math.max(16, Math.min(46, z));
     camera.position.y = camera.position.z * 0.08;
