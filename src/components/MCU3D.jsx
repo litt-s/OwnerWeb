@@ -213,7 +213,7 @@ function ResponsiveCamera() {
     const aspect = size.width / Math.max(1, size.height);
     const fov = (camera.fov * Math.PI) / 180;
     // 取景宽度要留出余量：拖动旋转时两侧标注会向外摆，太窄会被画布边缘裁掉
-    const targetWidth = aspect < 1.3 ? 15 : 22;
+    const targetWidth = aspect < 1.3 ? 15 : 24;
     const z = targetWidth / (2 * Math.tan(fov / 2) * aspect);
     camera.position.z = Math.max(16, Math.min(46, z));
     camera.position.y = camera.position.z * 0.08;
@@ -345,11 +345,11 @@ function McuModel({ dragRef, onHover, goTo }) {
 
   // lx/lz 为标签中心；把标签放在线段末端圆圈之外，避免与圆圈重叠
   const callouts = [
-    { label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-3.95, 0, -8.6, 0) },
-    { label: tex.labels.experience, lx: 0, lz: -5.5, line: lineBetween(0, -2.95, 0, -4.7) },
-    { label: tex.labels.strengths, lx: 10.3, lz: -1.3, line: lineBetween(4.9, -1.3, 8.6, -1.3) },
-    { label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(4.9, 2.0, 8.6, 2.0) },
-    { label: tex.labels.comments, lx: -10.3, lz: 1.6, line: lineBetween(-5.6, 1.6, -8.6, 1.6) },
+    { label: tex.labels.projects, lx: -10.3, lz: 0, line: lineBetween(-5.7, 0, -8.6, 0) },
+    { label: tex.labels.experience, lx: 0, lz: -5.5, line: lineBetween(0, -3.9, 0, -4.7) },
+    { label: tex.labels.strengths, lx: 10.3, lz: -1.3, line: lineBetween(6.1, -1.3, 8.6, -1.3) },
+    { label: tex.labels.contact, lx: 10.3, lz: 2.0, line: lineBetween(6.6, 2.0, 8.6, 2.0) },
+    { label: tex.labels.comments, lx: -10.3, lz: 1.6, line: lineBetween(-7.1, 1.6, -8.6, 1.6) },
   ];
 
   const bind = (key) => ({
@@ -416,6 +416,7 @@ function McuModel({ dragRef, onHover, goTo }) {
       <group ref={floatRef}>
         {/* stood-up board, leaning back toward viewer */}
         <group rotation={[Math.PI / 2 - 0.34, 0, 0]}>
+          <group scale={1.35}>
           {/* PCB base */}
           <mesh position={[0, 0, 0]}>
             <boxGeometry args={[11.6, 0.38, 6.0]} />
@@ -605,6 +606,7 @@ function McuModel({ dragRef, onHover, goTo }) {
               <meshBasicMaterial map={g.sharp ? tex.guideSharp : tex.guide} transparent opacity={0.9} depthWrite={false} side={THREE.DoubleSide} />
             </mesh>
           ))}
+          </group>
 
           {/* solid leader lines + page labels (rotate with the board)；窄屏隐藏标注避免裁切 */}
           {!narrow && callouts.map((c, ci) => (
