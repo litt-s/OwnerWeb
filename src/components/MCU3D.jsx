@@ -383,7 +383,6 @@ function McuModel({ dragRef, onHover, goTo }) {
     const float = floatRef.current;
     const showFrontAnnotations = Math.cos(d.rotY) > 0.15;
     if (guideRef.current) guideRef.current.visible = showFrontAnnotations;
-    if (calloutRef.current) calloutRef.current.visible = showFrontAnnotations;
 
     if (model) {
       if (!d.dragging) {
