@@ -493,7 +493,7 @@ ul {
   font-family: var(--mono);
   font-size: 12px;
   letter-spacing: 0.3em;
-  color: var(--text-mute);
+  color: var(--text-dim);
   border: 1px solid var(--line);
   border-radius: 18px;
   background: radial-gradient(80% 80% at 50% 50%, rgba(255, 59, 48, 0.05), transparent);
@@ -977,9 +977,10 @@ ul {
 }
 .cl-label {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
   letter-spacing: 0.12em;
-  color: var(--text-mute);
+  color: var(--text-dim);
   text-transform: uppercase;
   width: 84px;
 }
@@ -1015,13 +1016,14 @@ a.cl-value:hover {
   color: var(--accent);
 }
 .stat-l {
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 500;
   color: var(--text);
 }
 .stat-s {
   font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-mute);
+  font-size: 12px;
+  color: var(--text-dim);
   letter-spacing: 0.04em;
 }
 
