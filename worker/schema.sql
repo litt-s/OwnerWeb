@@ -76,3 +76,18 @@ CREATE TABLE IF NOT EXISTS site_content (
   contact_json TEXT NOT NULL DEFAULT '{}',
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS articles (
+  id TEXT PRIMARY KEY,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  title TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  excerpt TEXT NOT NULL DEFAULT '',
+  content TEXT NOT NULL,
+  cover TEXT,
+  status TEXT NOT NULL DEFAULT 'draft',
+  published_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_articles_status_order ON articles(status, sort_order, id);

@@ -101,6 +101,22 @@ export function strengthDto(row) {
   };
 }
 
+export function articleDto(origin, row) {
+  return {
+    id: row.id,
+    sort_order: row.sort_order,
+    title: row.title,
+    slug: row.slug,
+    excerpt: row.excerpt,
+    content: row.content,
+    cover: mediaUrl(origin, row.cover),
+    status: row.status,
+    published_at: row.published_at,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
 export const parseStoredObject = (value) => {
   try {
     const parsed = JSON.parse(value || '{}');
@@ -173,6 +189,36 @@ export function normalizeStrengthInput(body, existing = {}) {
   const parsedSort = Number(body.sort_order ?? existing.sort_order);
   if (!Number.isInteger(parsedSort) || parsedSort < 1) return { error: '排序必须是不小于 1 的整数' };
   return { sort_order: parsedSort, title, desc };
+}
+
+export function normalizeArticleInput(body, existing = {}) {
+  const rawId = textOrEmpty(body.id ?? body.slug ?? existing.id ?? existing.slug).toLowerCase();
+  const id = rawId.replace(/\s+/g, '-');
+  const title = textOrEmpty(body.title ?? existing.title);
+  const slug = textOrEmpty(body.slug ?? existing.slug ?? id).toLowerCase().replace(/\s+/g, '-');
+  const excerpt = textOrEmpty(body.excerpt ?? existing.excerpt);
+  const content = typeof (body.content ?? existing.content) === 'string' ? String(body.content ?? existing.content).trim() : '';
+  const parsedSort = Number(body.sort_order ?? existing.sort_order);
+  const status = body.status === 'published' || existing.status === 'published' ? (body.status || existing.status) : 'draft';
+  if (!id || !/^[a-z0-9][a-z0-9-]*$/.test(id) || id.length > 80) return { error: '文章 ID 只能包含小写字母、数字和短横线，最长 80 个字符' };
+  if (!slug || !/^[a-z0-9][a-z0-9-]*$/.test(slug) || slug.length > 100) return { error: '文章 slug 格式不正确' };
+  if (!title) return { error: '文章标题必填' };
+  if (title.length > 160) return { error: '文章标题不能超过 160 个字符' };
+  if (excerpt.length > 500) return { error: '文章摘要不能超过 500 个字符' };
+  if (!content) return { error: '文章正文必填' };
+  if (content.length > 100000) return { error: '文章正文不能超过 100000 个字符' };
+  if (!Number.isInteger(parsedSort) || parsedSort < 1) return { error: '排序必须是不小于 1 的整数' };
+  return {
+    id,
+    sort_order: parsedSort,
+    title,
+    slug,
+    excerpt,
+    content,
+    cover: body.cover === undefined ? existing.cover ?? null : textOrEmpty(body.cover) || null,
+    status,
+    published_at: status === 'published' ? (existing.published_at || new Date().toISOString()) : null,
+  };
 }
 
 export function textWithLimit(value, fallback, label, limit) {

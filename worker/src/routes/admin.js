@@ -10,10 +10,78 @@ import {
   publicUser,
   siteContentDto,
   strengthDto,
+  articleDto,
+  normalizeArticleInput,
 } from '../lib/util.js';
 
 const r = new Hono();
 r.use('*', auth, adminOnly);
+
+/* ---------- 文章管理 ---------- */
+r.get('/articles', async (c) => {
+  const origin = new URL(c.req.url).origin;
+  const { results } = await c.env.DB.prepare('SELECT * FROM articles ORDER BY sort_order ASC, id ASC').all();
+  return c.json({ articles: results.map((row) => articleDto(origin, row)) });
+});
+
+r.post('/articles', async (c) => {
+  const maxRow = await c.env.DB.prepare('SELECT COALESCE(MAX(sort_order), 0) AS max_order FROM articles').first();
+  const normalized = normalizeArticleInput(await c.req.json().catch(() => ({})), { sort_order: maxRow.max_order + 1 });
+  if (normalized.error) return c.json({ error: normalized.error }, 400);
+  const duplicate = await c.env.DB.prepare('SELECT id FROM articles WHERE id = ? OR slug = ?')
+    .bind(normalized.id, normalized.slug)
+    .first();
+  if (duplicate) return c.json({ error: '文章 ID 或 slug 已存在' }, 409);
+  await c.env.DB.prepare(
+    `INSERT INTO articles (id, sort_order, title, slug, excerpt, content, cover, status, published_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  ).bind(
+    normalized.id,
+    normalized.sort_order,
+    normalized.title,
+    normalized.slug,
+    normalized.excerpt,
+    normalized.content,
+    normalized.cover,
+    normalized.status,
+    normalized.published_at
+  ).run();
+  const row = await c.env.DB.prepare('SELECT * FROM articles WHERE id = ?').bind(normalized.id).first();
+  return c.json({ article: articleDto(new URL(c.req.url).origin, row) }, 201);
+});
+
+r.put('/articles/:id', async (c) => {
+  const existing = await c.env.DB.prepare('SELECT * FROM articles WHERE id = ?').bind(c.req.param('id')).first();
+  if (!existing) return c.json({ error: '文章不存在' }, 404);
+  const normalized = normalizeArticleInput({ ...(await c.req.json().catch(() => ({}))), id: existing.id }, existing);
+  if (normalized.error) return c.json({ error: normalized.error }, 400);
+  const duplicate = await c.env.DB.prepare('SELECT id FROM articles WHERE (id = ? OR slug = ?) AND id != ?')
+    .bind(normalized.id, normalized.slug, existing.id)
+    .first();
+  if (duplicate) return c.json({ error: '文章 slug 已存在' }, 409);
+  await c.env.DB.prepare(
+    `UPDATE articles SET sort_order=?, title=?, slug=?, excerpt=?, content=?, cover=?, status=?, published_at=?, updated_at=datetime('now') WHERE id=?`
+  ).bind(
+    normalized.sort_order,
+    normalized.title,
+    normalized.slug,
+    normalized.excerpt,
+    normalized.content,
+    normalized.cover,
+    normalized.status,
+    normalized.published_at,
+    existing.id
+  ).run();
+  const row = await c.env.DB.prepare('SELECT * FROM articles WHERE id = ?').bind(existing.id).first();
+  return c.json({ article: articleDto(new URL(c.req.url).origin, row) });
+});
+
+r.delete('/articles/:id', async (c) => {
+  const existing = await c.env.DB.prepare('SELECT id FROM articles WHERE id = ?').bind(c.req.param('id')).first();
+  if (!existing) return c.json({ error: '文章不存在' }, 404);
+  await c.env.DB.prepare('DELETE FROM articles WHERE id = ?').bind(existing.id).run();
+  return c.json({ ok: true });
+});
 
 /* ---------- 评论管理 ---------- */
 r.get('/comments', async (c) => {

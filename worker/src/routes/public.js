@@ -5,6 +5,7 @@ import {
   projectDto,
   siteContentDto,
   strengthDto,
+  articleDto,
   normalizeCommentInput,
 } from '../lib/util.js';
 
@@ -31,6 +32,24 @@ r.get('/content/site', async (c) => {
   const row = await c.env.DB.prepare('SELECT * FROM site_content WHERE id = 1').first();
   if (!row) return c.json({ error: '站点内容不存在' }, 404);
   return c.json({ content: siteContentDto(row) });
+});
+
+/* 博客文章：公开接口只返回已发布文章 */
+r.get('/articles', async (c) => {
+  const origin = new URL(c.req.url).origin;
+  const { results } = await c.env.DB.prepare(
+    "SELECT * FROM articles WHERE status = 'published' ORDER BY sort_order ASC, published_at DESC, id ASC"
+  ).all();
+  return c.json({ articles: results.map((row) => articleDto(origin, row)) });
+});
+
+r.get('/articles/:articleId', async (c) => {
+  const origin = new URL(c.req.url).origin;
+  const row = await c.env.DB.prepare("SELECT * FROM articles WHERE id = ? AND status = 'published'")
+    .bind(c.req.param('articleId'))
+    .first();
+  if (!row) return c.json({ error: '文章不存在' }, 404);
+  return c.json({ article: articleDto(origin, row) });
 });
 
 /* 项目（未登录时，需登录的项目只返回锁定卡片信息） */
