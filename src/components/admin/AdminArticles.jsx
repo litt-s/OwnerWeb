@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Editor, Toolbar } from '@wangeditor/editor-for-react';
 import '@wangeditor/editor/dist/css/style.css';
-import hljs from 'highlight.js/lib/common';
+import ArticleHtml from '../ArticleHtml';
 import {
   fetchAdminArticles,
   createArticle,
@@ -36,7 +36,6 @@ function toDraft(article) {
 
 export default function AdminArticles({ token }) {
   const editorRef = useRef(null);
-  const previewRef = useRef(null);
   const [editor, setEditor] = useState(null);
   const [articles, setArticles] = useState([]);
   const [draft, setDraft] = useState(null);
@@ -48,11 +47,6 @@ export default function AdminArticles({ token }) {
   const load = () => fetchAdminArticles(token).then(setArticles).catch((error) => setErr(error.message));
 
   useEffect(() => { load(); }, []);
-
-  useEffect(() => {
-    if (!preview || !previewRef.current) return;
-    previewRef.current.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
-  }, [preview, draft?.content]);
 
   const openNew = () => {
     const nextOrder = articles.reduce((max, item) => Math.max(max, item.sort_order || 0), 0) + 1;
@@ -215,7 +209,7 @@ export default function AdminArticles({ token }) {
                   mode="default"
                 />
               </div>
-              {preview && <div ref={previewRef} className="article-preview" dangerouslySetInnerHTML={{ __html: draft.content }} />}
+                {preview && <ArticleHtml content={draft.content} className="article-preview" />}
               <p className="editor-note">支持 H1-H5、字号、图片、列表、引用和代码块；正文图片会上传到 Cloudflare KV。</p>
             </div>
           </div>

@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import hljs from 'highlight.js/lib/common';
 import PageShell from '../components/PageShell';
+import ArticleHtml from '../components/ArticleHtml';
 import { fetchPublicArticle } from '../services/articles';
 
 export default function ArticleDetailPage() {
   const { id } = useParams();
   const [article, setArticle] = useState(null);
-  const contentRef = useRef(null);
   const [state, setState] = useState({ loading: true, error: '' });
 
   useEffect(() => {
@@ -18,11 +17,6 @@ export default function ArticleDetailPage() {
       .finally(() => active && setState((current) => ({ ...current, loading: false })));
     return () => { active = false; };
   }, [id]);
-
-  useEffect(() => {
-    if (!contentRef.current) return;
-    contentRef.current.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
-  }, [article]);
 
   return (
     <PageShell title={article?.title || '文章详情'}>
@@ -37,7 +31,7 @@ export default function ArticleDetailPage() {
               {article.excerpt && <p>{article.excerpt}</p>}
             </header>
             {article.cover && <img className="article-cover" src={article.cover} alt="" />}
-            <div ref={contentRef} className="article-content" dangerouslySetInnerHTML={{ __html: article.content }} />
+            <ArticleHtml content={article.content} className="article-content" />
             <div className="article-comments-placeholder">文章评论即将开放。</div>
             <Link to="/blog" className="back" style={{ display: 'inline-block' }}>← 返回博客文章</Link>
           </article>
