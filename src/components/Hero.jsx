@@ -46,7 +46,7 @@ export default function Hero() {
           <Link to="/experience">个人经历</Link>
           <Link to="/strengths">个人优势</Link>
           <Link to="/comments">访客留言</Link>
-          <a href="#contact">联系我</a>
+          <Link to="/blog">博客文章</Link>
         </nav>
       </div>
     </section>

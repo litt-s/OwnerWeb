@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Search from './Search';
 import { useAuth } from '../context/AuthContext';
-import { ArrowUpRight, BrandMark } from './icons';
+import { BrandMark } from './icons';
 
 export default function Nav() {
   const navigate = useNavigate();
@@ -16,7 +16,6 @@ export default function Nav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const goContact = () => navigate('/', { state: { scrollTo: '#contact' } });
   const onLogout = () => {
     logout();
     navigate('/');
@@ -44,10 +43,6 @@ export default function Nav() {
               <button className="nav-cta ghost" onClick={onLogout} type="button">退出</button>
             </>
           )}
-          <button className="nav-cta" onClick={goContact} type="button">
-            联系我
-            <ArrowUpRight />
-          </button>
         </div>
       </div>
     </header>

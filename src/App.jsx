@@ -4,7 +4,6 @@ import { AuthProvider } from './context/AuthContext';
 import { ContentProvider } from './context/ContentContext';
 import Nav from './components/Nav';
 import Hero from './components/Hero';
-import Contact from './components/Contact';
 import Experience from './components/Experience';
 import Projects from './components/Projects';
 import Strengths from './components/Strengths';
@@ -14,6 +13,8 @@ import ProfilePage from './pages/ProfilePage';
 import CommentsPage from './pages/CommentsPage';
 import AdminPage from './pages/AdminPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
+import BlogPage from './pages/BlogPage';
+import ArticleDetailPage from './pages/ArticleDetailPage';
 import ThinkingDots from './components/ThinkingDots';
 
 function SiteAtmosphere() {
@@ -50,7 +51,6 @@ function Home() {
       <Experience />
       <Projects />
       <Strengths />
-      <Contact />
     </>
   );
 }
@@ -68,6 +68,8 @@ export default function App() {
               <Route path="/experience" element={<PageShell title="个人经历"><Experience /></PageShell>} />
               <Route path="/projects" element={<PageShell title="精选项目"><Projects /></PageShell>} />
               <Route path="/projects/:id" element={<ProjectDetailPage />} />
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/blog/:id" element={<ArticleDetailPage />} />
               <Route path="/strengths" element={<PageShell title="个人优势"><Strengths /></PageShell>} />
               <Route path="/comments" element={<CommentsPage />} />
               <Route path="/auth" element={<AuthPage />} />

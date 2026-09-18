@@ -16,7 +16,7 @@ const HOTSPOTS = {
   chip: { index: '01', label: '精选项目', to: '/', anchor: '#projects' },
   headers: { index: '02', label: '个人经历', to: '/', anchor: '#experience' },
   crystal: { index: '03', label: '个人优势', to: '/', anchor: '#strengths' },
-  usb: { index: '04', label: '联系我', to: '/', anchor: '#contact' },
+  usb: { index: '04', label: '博客文章', to: '/blog' },
   buzzer: { index: '05', label: '访客留言', to: '/comments' },
 };
 
@@ -274,7 +274,7 @@ function McuModel({ dragRef, onHover, goTo }) {
         projects: makeLabel('精选项目'),
         experience: makeLabel('个人经历'),
         strengths: makeLabel('个人优势'),
-        contact: makeLabel('联系我'),
+        contact: makeLabel('博客文章'),
         comments: makeLabel('访客留言'),
       },
     }),

@@ -23,7 +23,7 @@ const buildIndex = (profile, projects, strengths) => {
     { label: '个人经历', sub: 'About', to: '/experience' },
     { label: '精选项目', sub: 'Projects', to: '/projects' },
     { label: '个人优势', sub: 'Capabilities', to: '/strengths' },
-    { label: '联系我', sub: 'Contact', to: '/', anchor: '#contact' },
+    { label: '博客文章', sub: 'Blog', to: '/blog' },
   ];
   projects.forEach((p) => {
     index.push({ label: p.name, sub: p.tagline, to: '/projects' });

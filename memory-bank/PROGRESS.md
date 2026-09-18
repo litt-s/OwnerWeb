@@ -116,6 +116,7 @@
 - 全站光点亮度调整（`3.63`）：非后台页面全局 `ThinkingDots` 叠加层不透明度从 `0.34` 提升到 `0.62`，增强深色背景上的光点和连线可见度。
 - 博客功能产品与架构设计（`3.64`）：确认移除首页公开联系区块、保留个人经历页联系方式；新增博客列表/详情路由、文章与文章评论数据模型、公开/管理员 API 规划，并将 PCB 联系我热点定义为博客入口。同步更新 `PRD.md`、`DESIGN.md`、`ARCHITECTURE.md`、`DATA_MODEL.md` 和 `TASKS.md`。
 - 博客文章接口与数据表（`3.65`）：新增 Worker `articles` 表及排序/状态索引，新增文章 DTO 和输入校验，实现已发布文章列表/详情接口，以及管理员文章列表、新增、编辑、删除接口；`node --check` 与 `wrangler deploy --dry-run` 验证通过。
+- 博客前台页面（`3.66`）：新增 `/blog` 文章列表和 `/blog/:id` 文章详情，接入文章公开接口；移除首页联系区块和导航联系按钮，将 PCB/移动端入口与站内搜索的联系入口改为博客入口；`npm run build` 验证通过。
 - PCB 背面标注隐藏与精选项目连线修复（`3.51`）：正面虚线框、引导线和提示文字统一使用同一可见性状态，转到背面时全部隐藏；精选项目引线起点调整到虚线框内侧，消除连接间隙。
 
 - 项目视频接入腾讯云 COS（`6.2`/`6.3`，待密钥验证）：新增 `worker/src/lib/cos.js`（COS PUT Object 预签名，HMAC-SHA1，签名 host）与接口 `POST /api/admin/projects/:id/video/sign`；后台项目编辑新增「上传视频到 COS」（XHR 直传 + 进度），上传后把 COS 直链写入 `video` 字段，保留手填外链；COS 配置（`COS_SECRET_ID`/`COS_SECRET_KEY`/`COS_BUCKET`/`COS_REGION`/`COS_VIDEO_PREFIX`/`COS_DOMAIN`）经 `.env.local` → `npm run config` 生成到 dev.vars/secrets；`DEPLOY.md` 增加 COS 控制台步骤（建桶公有读私有写、子账号密钥、CORS）。已 `wrangler secret bulk` + 部署 Worker。首次验证报 `403 SignatureDoesNotMatch`：经官方 `cos-nodejs-sdk-v5` 对齐确认**本项目签名与官方 SDK 逐字节一致**，判定为用户密钥不匹配；用户重填后本地 PUT/GET/DELETE 通过，但 Worker 仍 403——根因是误在 `worker/` 目录执行 `npm run config`（该目录无此脚本）导致 `.secrets.json` 未用新密钥重生成。在根目录重跑 `npm run config` → 上传 secrets → 部署后，端到端验证通过：**预签名 200 → 直传 200 → 公有读回读 200 → 删除 204**。

@@ -2326,6 +2326,9 @@ iframe.editor-video-preview {
   .str-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  .blog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .exp-stats {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -2358,6 +2361,9 @@ iframe.editor-video-preview {
     height: clamp(300px, 52vh, 460px);
   }
   .str-grid {
+    grid-template-columns: 1fr;
+  }
+  .blog-grid {
     grid-template-columns: 1fr;
   }
   .exp-meta {
