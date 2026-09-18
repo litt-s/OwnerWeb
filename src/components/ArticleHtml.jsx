@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import hljs from 'highlight.js/lib/common';
+import 'highlight.js/styles/atom-one-dark.css';
 
 function languageOf(code) {
   const className = code.className || '';
@@ -16,6 +17,8 @@ export default function ArticleHtml({ content, className = '' }) {
       if (pre.parentElement?.classList.contains('article-code-block')) return;
       const code = pre.querySelector('code');
       if (!code) return;
+      const languageName = languageOf(code);
+      if (!code.className.includes('language-')) code.classList.add(`language-${languageName}`);
       hljs.highlightElement(code);
 
       const shell = document.createElement('div');
@@ -23,7 +26,7 @@ export default function ArticleHtml({ content, className = '' }) {
       const header = document.createElement('div');
       header.className = 'article-code-header';
       const language = document.createElement('span');
-      language.textContent = languageOf(code);
+      language.textContent = languageName;
       const actions = document.createElement('div');
       actions.className = 'article-code-actions';
       const copy = document.createElement('button');
