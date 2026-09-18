@@ -213,6 +213,7 @@ export default function AdminArticles({ token }) {
                     value={draft.content}
                     defaultConfig={editorConfig}
                     onCreated={(instance) => { editorRef.current = instance; setEditor(instance); }}
+                    onDestroyed={() => { editorRef.current = null; setEditor(null); }}
                     onChange={(instance) => setDraft((current) => ({ ...current, content: instance.getHtml() }))}
                     mode="default"
                   />
