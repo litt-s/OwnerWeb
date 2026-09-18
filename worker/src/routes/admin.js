@@ -12,6 +12,7 @@ import {
   strengthDto,
   articleDto,
   normalizeArticleInput,
+  mediaUrl,
 } from '../lib/util.js';
 
 const r = new Hono();
@@ -81,6 +82,21 @@ r.delete('/articles/:id', async (c) => {
   if (!existing) return c.json({ error: '文章不存在' }, 404);
   await c.env.DB.prepare('DELETE FROM articles WHERE id = ?').bind(existing.id).run();
   return c.json({ ok: true });
+});
+
+r.post('/articles/:id/image', async (c) => {
+  const article = await c.env.DB.prepare('SELECT id FROM articles WHERE id = ?').bind(c.req.param('id')).first();
+  if (!article) return c.json({ error: '文章不存在，请先保存文章' }, 404);
+  const form = await c.req.formData();
+  const file = form.get('image');
+  if (!file || typeof file === 'string') return c.json({ error: '未上传图片' }, 400);
+  if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) {
+    return c.json({ error: '只支持 PNG、JPG、WebP 或 GIF 图片' }, 400);
+  }
+  if (file.size > 5 * 1024 * 1024) return c.json({ error: '图片不能超过 5MB' }, 400);
+  const key = `articles/images/${article.id}-${Date.now()}${extFromMime(file.type, '.png')}`;
+  await c.env.MEDIA.put(key, await file.arrayBuffer());
+  return c.json({ key, url: mediaUrl(new URL(c.req.url).origin, key) }, 201);
 });
 
 /* ---------- 评论管理 ---------- */

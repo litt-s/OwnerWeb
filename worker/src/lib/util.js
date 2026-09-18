@@ -135,6 +135,15 @@ export const siteContentDto = (row) => ({
 
 export const textOrEmpty = (v) => (typeof v === 'string' ? v.trim() : '');
 
+export function sanitizeArticleHtml(value) {
+  return String(value || '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<\/?(script|style|iframe|object|embed|form|meta|link)[^>]*>/gi, '')
+    .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/\s(href|src)\s*=\s*(["'])\s*javascript:[^"']*\2/gi, '')
+    .replace(/\s(href|src)\s*=\s*(["'])\s*data:[^"']*\2/gi, '');
+}
+
 export const parseListValue = (value) => {
   if (Array.isArray(value)) return value.map((i) => String(i).trim()).filter(Boolean);
   if (typeof value === 'string') return value.split(/\r?\n|,/).map((i) => i.trim()).filter(Boolean);
@@ -197,7 +206,7 @@ export function normalizeArticleInput(body, existing = {}) {
   const title = textOrEmpty(body.title ?? existing.title);
   const slug = textOrEmpty(body.slug ?? existing.slug ?? id).toLowerCase().replace(/\s+/g, '-');
   const excerpt = textOrEmpty(body.excerpt ?? existing.excerpt);
-  const content = typeof (body.content ?? existing.content) === 'string' ? String(body.content ?? existing.content).trim() : '';
+  const content = sanitizeArticleHtml(body.content ?? existing.content);
   const parsedSort = Number(body.sort_order ?? existing.sort_order);
   const status = body.status === 'published' || existing.status === 'published' ? (body.status || existing.status) : 'draft';
   if (!id || !/^[a-z0-9][a-z0-9-]*$/.test(id) || id.length > 80) return { error: '文章 ID 只能包含小写字母、数字和短横线，最长 80 个字符' };

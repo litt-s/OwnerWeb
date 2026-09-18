@@ -135,8 +135,8 @@ SQLite 表名：`articles`
 | `title` | TEXT | 文章标题 |
 | `slug` | TEXT UNIQUE | URL 短标识，只允许小写字母、数字和短横线 |
 | `excerpt` | TEXT | 文章摘要 |
-| `content` | TEXT | 文章正文纯文本/Markdown 内容 |
-| `cover` | TEXT | 封面 URL，可为空 |
+| `content` | TEXT | 经过基础清洗的受控 HTML 正文 |
+| `cover` | TEXT | KV 媒体 URL，可为空 |
 | `status` | TEXT | `draft` 或 `published`，默认 `draft` |
 | `published_at` | TEXT | 发布时间，可为空 |
 | `created_at` | TEXT | 创建时间 |
@@ -146,6 +146,7 @@ SQLite 表名：`articles`
 
 - `id`、`slug` 唯一；`title` 必填且最长 160 字符。
 - `excerpt` 最长 500 字符，`content` 必填且最长 100000 字符。
+- 正文允许受控 HTML；后端移除脚本、事件属性、危险协议和高风险嵌入标签。
 - `sort_order` 必须是不小于 1 的整数。
 - 公开接口只返回 `status = published` 的文章；后台可查看草稿。
 - 删除文章同时删除其文章评论。
@@ -508,6 +509,7 @@ SQLite 表名：`article_comments`
 | POST | `/api/admin/articles` | 新增文章 | 管理员 |
 | PUT | `/api/admin/articles/:id` | 修改文章 | 管理员 |
 | DELETE | `/api/admin/articles/:id` | 删除文章及其评论 | 管理员 |
+| POST | `/api/admin/articles/:id/image` | 上传文章封面或正文图片到 KV，multipart 字段 `image` | 管理员 |
 | GET | `/api/admin/article-comments` | 获取文章评论管理列表 | 管理员 |
 | DELETE | `/api/admin/article-comments/:id` | 删除文章评论及其回复 | 管理员 |
 | GET | `/api/admin/content/site` | 获取站点内容管理数据 | 管理员 |

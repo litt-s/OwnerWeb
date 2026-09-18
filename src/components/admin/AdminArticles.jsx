@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { Editor, Toolbar } from '@wangeditor/editor-for-react';
+import '@wangeditor/editor/dist/css/style.css';
 import {
   fetchAdminArticles,
   createArticle,
   updateArticle,
   deleteArticle,
+  uploadArticleImage,
 } from '../../services/articles';
 
 const emptyDraft = {
@@ -32,6 +35,7 @@ function toDraft(article) {
 
 export default function AdminArticles({ token }) {
   const editorRef = useRef(null);
+  const [editor, setEditor] = useState(null);
   const [articles, setArticles] = useState([]);
   const [draft, setDraft] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
@@ -55,18 +59,24 @@ export default function AdminArticles({ token }) {
     setErr('');
   };
 
-  const insertMarkdown = (prefix, suffix = '') => {
-    const textarea = editorRef.current;
-    if (!textarea || !draft) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = draft.content.slice(start, end) || '内容';
-    const next = `${draft.content.slice(0, start)}${prefix}${selected}${suffix}${draft.content.slice(end)}`;
-    setDraft((current) => ({ ...current, content: next }));
-    requestAnimationFrame(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
-    });
+  const toolbarConfig = {
+    toolbarKeys: [
+      'headerSelect', 'bold', 'italic', 'through', 'color', 'bgColor',
+      'fontSize', 'blockquote', 'bulletedList', 'numberedList',
+      'insertLink', 'uploadImage', 'codeBlock', 'divider', 'undo', 'redo',
+    ],
+  };
+  const editorConfig = {
+    placeholder: '开始写下你的工程记录…',
+    MENU_CONF: {
+      uploadImage: {
+        customUpload: async (file, insertFn) => {
+          if (!draft?.id) throw new Error('请先保存文章，再插入正文图片');
+          const url = await uploadArticleImage(draft.id, file, token);
+          insertFn(url, file.name, url);
+        },
+      },
+    },
   };
 
   const save = async () => {
@@ -166,20 +176,31 @@ export default function AdminArticles({ token }) {
                 <div><label>状态</label><select value={draft.status} onChange={(event) => setDraft((current) => ({ ...current, status: event.target.value }))}><option value="draft">草稿</option><option value="published">发布</option></select></div>
               </div>
               <label>封面地址</label>
-              <input value={draft.cover} onChange={(event) => setDraft((current) => ({ ...current, cover: event.target.value }))} placeholder="可选图片 URL" />
+              <input value={draft.cover} onChange={(event) => setDraft((current) => ({ ...current, cover: event.target.value }))} placeholder="可选图片 URL，或上传图片" />
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={async (event) => {
+                const file = event.target.files?.[0];
+                event.target.value = '';
+                if (!file || !draft.id) return;
+                try {
+                  const url = await uploadArticleImage(draft.id, file, token);
+                  setDraft((current) => ({ ...current, cover: url }));
+                  setMsg('封面已上传，请保存文章');
+                } catch (error) { setErr(error.message); }
+              }} />
             </div>
             <div className="editor-block article-writing-editor">
-              <h4>正文编辑 · Markdown</h4>
-              <div className="article-toolbar">
-                <button type="button" onClick={() => insertMarkdown('# ')}>H1</button>
-                <button type="button" onClick={() => insertMarkdown('## ')}>H2</button>
-                <button type="button" onClick={() => insertMarkdown('**', '**')}>加粗</button>
-                <button type="button" onClick={() => insertMarkdown('> ')}>引用</button>
-                <button type="button" onClick={() => insertMarkdown('- ')}>列表</button>
-                <button type="button" onClick={() => insertMarkdown('```\n', '\n```')}>代码</button>
+              <h4>正文编辑 · wangEditor</h4>
+              <div className="article-rich-editor">
+                <Toolbar editor={editor} defaultConfig={toolbarConfig} mode="default" />
+                <Editor
+                  value={draft.content}
+                  defaultConfig={editorConfig}
+                  onCreated={(instance) => { editorRef.current = instance; setEditor(instance); }}
+                  onChange={(editor) => setDraft((current) => ({ ...current, content: editor.getHtml() }))}
+                  mode="default"
+                />
               </div>
-              <textarea ref={editorRef} className="article-content-input" value={draft.content} onChange={(event) => setDraft((current) => ({ ...current, content: event.target.value }))} placeholder="开始写下你的工程记录…" />
-              <p className="editor-note">支持 Markdown 文本，发布后将在文章详情页展示。</p>
+              <p className="editor-note">支持 H1-H5、字号、图片、列表、引用和代码块；正文图片会上传到 Cloudflare KV。</p>
             </div>
           </div>
         </div>

@@ -30,11 +30,7 @@ export default function ArticleDetailPage() {
               {article.excerpt && <p>{article.excerpt}</p>}
             </header>
             {article.cover && <img className="article-cover" src={article.cover} alt="" />}
-            <div className="article-content">
-              {article.content.split(/\r?\n/).map((line, index) => (
-                line.trim() ? <p key={index}>{line}</p> : <div className="article-break" key={index} />
-              ))}
-            </div>
+            <div className="article-content" dangerouslySetInnerHTML={{ __html: article.content }} />
             <div className="article-comments-placeholder">文章评论即将开放。</div>
             <Link to="/blog" className="back" style={{ display: 'inline-block' }}>← 返回博客文章</Link>
           </article>

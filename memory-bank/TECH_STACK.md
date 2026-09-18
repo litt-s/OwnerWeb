@@ -10,6 +10,7 @@
 样式：普通 CSS
 视觉增强：Three.js + @react-three/fiber + OGL
 请求封装：src/api.js（支持 VITE_API_BASE）
+富文本编辑：wangEditor（受控 HTML）
 业务接口：src/services/
 ```
 
@@ -119,6 +120,7 @@ NODE_ENV、PORT、CORS_ORIGIN、DB_DIR、UPLOAD_DIR、JWT_SECRET、ADMIN_EMAIL�
 - 两套后端实现**同一套 API**，前端不感知差异。
 - Worker 密码使用 **PBKDF2（Web Crypto）**；Node 后端使用 bcryptjs。两者哈希格式不同，数据不通用。
 - Worker 文件存 **KV**，数据库只保存 key；对外通过 `/media/<key>` 读取，返回 Worker 绝对地址。
+- 文章封面和正文图片存 Worker KV，数据库/正文只保存 `/media/<key>` 地址；文章 HTML 由后端基础清洗后保存。
 - 头像上传用 **base64 JSON**（`{ dataUrl }`），项目封面用 **multipart**（`FormData`）；视频用外链 URL。
 - D1/SQLite 连接需保证外键与索引；公开评论接口不返回 `email`/`user_id`。
 - 后台操作必须同时校验登录态和管理员角色。

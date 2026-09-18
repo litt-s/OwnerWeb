@@ -18,3 +18,13 @@ export const updateArticle = (id, payload, token) =>
 
 export const deleteArticle = (id, token) =>
   api(`/api/admin/articles/${encodeURIComponent(id)}`, { method: 'DELETE', token });
+
+export const uploadArticleImage = (id, file, token) => {
+  const form = new FormData();
+  form.append('image', file);
+  return api(`/api/admin/articles/${encodeURIComponent(id)}/image`, {
+    method: 'POST',
+    form,
+    token,
+  }).then((data) => data.url);
+};
