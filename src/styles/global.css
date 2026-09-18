@@ -1852,6 +1852,99 @@ a.channel:hover .channel-value::after {
 .admin-content {
   min-width: 0;
 }
+.article-table .row,
+.article-table .row.head {
+  grid-template-columns: 1.8fr 0.7fr 0.5fr 1fr auto;
+}
+.article-table .row > span:first-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.article-table .row small {
+  color: var(--text-mute);
+  font-family: var(--mono);
+  overflow-wrap: anywhere;
+}
+.article-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.28fr);
+  gap: 20px;
+  margin-bottom: 60px;
+}
+.article-meta-editor,
+.article-writing-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.article-meta-editor label {
+  margin-top: 6px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.article-meta-editor input,
+.article-meta-editor textarea,
+.article-meta-editor select,
+.article-content-input {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--bg-soft);
+  color: var(--text);
+  font: inherit;
+  padding: 11px 13px;
+  outline: none;
+}
+.article-meta-editor input:focus,
+.article-meta-editor textarea:focus,
+.article-meta-editor select:focus,
+.article-content-input:focus {
+  border-color: var(--accent);
+}
+.article-meta-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.article-meta-fields > div {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.article-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  background: var(--surface-2);
+}
+.article-toolbar button {
+  padding: 6px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.article-toolbar button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.article-content-input {
+  min-height: 520px;
+  resize: vertical;
+  border-radius: 0 0 10px 10px;
+  font-family: var(--mono);
+  line-height: 1.8;
+}
 .admin-toolbar {
   display: flex;
   align-items: center;
@@ -2435,6 +2528,13 @@ iframe.editor-video-preview {
   .admin-table .row.head,
   .admin-table.users .row.head {
     display: none;
+  }
+  .article-editor-grid {
+    grid-template-columns: 1fr;
+  }
+  .article-table .row,
+  .article-table .row.head {
+    grid-template-columns: 1fr 1fr;
   }
 }
 

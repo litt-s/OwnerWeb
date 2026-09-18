@@ -6,6 +6,7 @@ import { api } from '../api';
 import AdminProjects from '../components/admin/AdminProjects';
 import AdminStrengths from '../components/admin/AdminStrengths';
 import AdminSiteContent from '../components/admin/AdminSiteContent';
+import AdminArticles from '../components/admin/AdminArticles';
 
 export default function AdminPage() {
   const { user, token, loading } = useAuth();
@@ -15,6 +16,7 @@ export default function AdminPage() {
   const [projectsActive, setProjectsActive] = useState(false);
   const [strengthsActive, setStrengthsActive] = useState(false);
   const [contentActive, setContentActive] = useState(false);
+  const [articlesActive, setArticlesActive] = useState(false);
   const [err, setErr] = useState('');
   const [listLoading, setListLoading] = useState(false);
   const [confirm, setConfirm] = useState(null);
@@ -49,6 +51,7 @@ export default function AdminPage() {
     else if (tab === 'projects') setProjectsActive(true);
     else if (tab === 'strengths') setStrengthsActive(true);
     else if (tab === 'content') setContentActive(true);
+    else if (tab === 'articles') setArticlesActive(true);
   }, [tab, user]);
 
   const delComment = async (comment) => {
@@ -93,6 +96,7 @@ export default function AdminPage() {
           <button type="button" className={tab === 'comments' ? 'on' : ''} onClick={() => setTab('comments')}>评论管理</button>
           <button type="button" className={tab === 'projects' ? 'on' : ''} onClick={() => setTab('projects')}>项目管理</button>
           <button type="button" className={tab === 'strengths' ? 'on' : ''} onClick={() => setTab('strengths')}>优势管理</button>
+          <button type="button" className={tab === 'articles' ? 'on' : ''} onClick={() => setTab('articles')}>文章管理</button>
           <button type="button" className={tab === 'users' ? 'on' : ''} onClick={() => setTab('users')}>用户管理</button>
         </div>
         {err && <p className="form-err">{err}</p>}
@@ -174,6 +178,7 @@ export default function AdminPage() {
         {tab === 'projects' && projectsActive && <AdminProjects token={token} />}
         {tab === 'strengths' && strengthsActive && <AdminStrengths token={token} />}
         {tab === 'content' && contentActive && <AdminSiteContent token={token} />}
+        {tab === 'articles' && articlesActive && <AdminArticles token={token} />}
       </div>
     </PageShell>
   );
