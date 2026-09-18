@@ -204,21 +204,18 @@ export default function AdminArticles({ token }) {
                   <button type="button" className={preview ? 'on' : ''} onClick={() => setPreview(true)}>预览</button>
                 </div>
               </div>
-              {preview ? (
-                <div ref={previewRef} className="article-preview" dangerouslySetInnerHTML={{ __html: draft.content }} />
-              ) : (
-                <div className="article-rich-editor">
-                  <Toolbar editor={editor} defaultConfig={toolbarConfig} mode="default" />
-                  <Editor
-                    value={draft.content}
-                    defaultConfig={editorConfig}
-                    onCreated={(instance) => { editorRef.current = instance; setEditor(instance); }}
-                    onDestroyed={() => { editorRef.current = null; setEditor(null); }}
-                    onChange={(instance) => setDraft((current) => ({ ...current, content: instance.getHtml() }))}
-                    mode="default"
-                  />
-                </div>
-              )}
+              <div className="article-rich-editor" style={{ display: preview ? 'none' : undefined }}>
+                <Toolbar editor={editor} defaultConfig={toolbarConfig} mode="default" />
+                <Editor
+                  value={draft.content}
+                  defaultConfig={editorConfig}
+                  onCreated={(instance) => { editorRef.current = instance; setEditor(instance); }}
+                  onDestroyed={() => { editorRef.current = null; setEditor(null); }}
+                  onChange={(instance) => setDraft((current) => ({ ...current, content: instance.getHtml() }))}
+                  mode="default"
+                />
+              </div>
+              {preview && <div ref={previewRef} className="article-preview" dangerouslySetInnerHTML={{ __html: draft.content }} />}
               <p className="editor-note">支持 H1-H5、字号、图片、列表、引用和代码块；正文图片会上传到 Cloudflare KV。</p>
             </div>
           </div>
