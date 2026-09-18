@@ -40,12 +40,14 @@
 ## 3. 页面关系
 
 ```text
-/                首页：Hero、经历、项目、优势、联系
+/                首页：Hero、经历、项目、优势、页脚
 /experience      个人经历页
 /projects        精选项目列表
 /projects/:id    项目详情页 + 项目多级评论
 /strengths       个人优势页
 /comments        访客留言页
+/blog            博客文章列表
+/blog/:id        博客文章详情 + 文章多级评论
 /auth            登录 / 注册页
 /settings        账号设置：昵称、头像、密码
 /profile         旧地址，重定向到 /settings
@@ -101,6 +103,18 @@ ProjectDetailPage -> ProjectComments(projectId)
   -> 前端按 parent_id 组装并递归渲染评论树
 ```
 
+### 博客文章与评论
+
+```text
+BlogPage -> services/articles.js -> GET /api/articles -> published articles
+ArticleDetailPage -> services/articles.js -> GET /api/articles/:id
+  -> GET /api/articles/:id/comments（顶层分页）
+  -> GET /api/articles/:id/comments/:rootId/replies（线程懒加载）
+  -> 登录用户 POST /api/articles/:id/comments
+AdminArticles -> POST/PUT/DELETE /api/admin/articles(/:id)
+AdminComments -> GET/DELETE /api/admin/article-comments(/:id)
+```
+
 ### 项目内容
 
 ```text
@@ -153,7 +167,7 @@ src/lib/seed.js     首次播种站点内容/项目/优势并创建管理员
 src/lib/auth.js     auth 与 adminOnly 中间件
 src/routes/auth.js     /api/auth
 src/routes/profile.js  /api/profile
-src/routes/public.js   /api/strengths、/content/site、/projects、评论
+   src/routes/public.js   /api/strengths、/content/site、/projects、/articles、评论
 src/routes/admin.js    /api/admin/*
 src/routes/media.js    /media/*
 ```
@@ -174,7 +188,7 @@ scripts/dev.mjs 一键同时启动后端与前端
 - 页面只负责展示、交互和状态；`src/api.js` 统一 fetch/JSON/Bearer/错误处理。
 - `AuthContext` 负责登录态，不直接操作数据库。
 - 后端负责参数校验、鉴权、文件处理和数据库操作（Worker 与 Node 实现同一套接口）。
-- D1/SQLite 保存用户、访客留言、项目评论、项目内容、个人优势、站点基础内容与账号资料。
+- D1/SQLite 保存用户、访客留言、项目评论、文章评论、项目内容、文章内容、个人优势、站点基础内容与账号资料。
 - Worker 文件存 KV，数据库只保存 key；对外经 `/media/<key>` 返回绝对地址。
 - `src/data/resume.js` 是静态兜底与初始化种子；已接管的内容模块以数据库为准。
 - 线上部署由 Cloudflare Pages（前端）+ Workers（API）+ D1 + KV 组成；本地开发由 Vite + 本地后端组成。

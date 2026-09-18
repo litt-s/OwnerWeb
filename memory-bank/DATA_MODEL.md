@@ -124,6 +124,34 @@ projects
 - 访客留言独立保存在 `guestbook_comments`，不再使用 `topic` 混存。
 - 初始化项目的视频路径仍可指向 `public/videos/`；后台上传的视频保存在 `server/uploads/projects/videos/`。
 
+## 2.2 articles 表
+
+SQLite 表名：`articles`
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `id` | TEXT PK | 稳定文章 ID，用于路由和评论关联 |
+| `sort_order` | INTEGER | 排序值，不小于 1 |
+| `title` | TEXT | 文章标题 |
+| `slug` | TEXT UNIQUE | URL 短标识，只允许小写字母、数字和短横线 |
+| `excerpt` | TEXT | 文章摘要 |
+| `content` | TEXT | 文章正文纯文本/Markdown 内容 |
+| `cover` | TEXT | 封面 URL，可为空 |
+| `status` | TEXT | `draft` 或 `published`，默认 `draft` |
+| `published_at` | TEXT | 发布时间，可为空 |
+| `created_at` | TEXT | 创建时间 |
+| `updated_at` | TEXT | 更新时间 |
+
+约束与校验：
+
+- `id`、`slug` 唯一；`title` 必填且最长 160 字符。
+- `excerpt` 最长 500 字符，`content` 必填且最长 100000 字符。
+- `sort_order` 必须是不小于 1 的整数。
+- 公开接口只返回 `status = published` 的文章；后台可查看草稿。
+- 删除文章同时删除其文章评论。
+
+序列化字段：`{ id, sort_order, title, slug, excerpt, content, cover, status, published_at }`。
+
 ## 3. strengths 表
 
 SQLite 表名：
@@ -332,6 +360,32 @@ project_comments
 - 任意层级回复通过 `parent_id` 递归关联，前端按评论树渲染。
 - 新增评论或回复时，后端会继承父评论所在线程的 `root_id`；历史数据在启动时自动回填。
 
+## 7.1 article_comments 表
+
+SQLite 表名：`article_comments`
+
+字段与 `project_comments` 保持一致，并增加文章关联：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `id` | INTEGER PK | 评论 ID |
+| `article_id` | TEXT | 对应 `articles.id` |
+| `nickname` | TEXT | 提交时昵称快照 |
+| `email` | TEXT | 提交时邮箱快照 |
+| `content` | TEXT | 评论或回复内容 |
+| `user_id` | INTEGER | 提交用户 ID |
+| `parent_id` | INTEGER | 被回复评论 ID，可为空 |
+| `root_id` | INTEGER | 所属顶层评论 ID |
+| `created_at` | TEXT | 创建时间 |
+
+约束与索引：
+
+- `article_id` 必须对应已存在文章；`article_id`、`parent_id`、`root_id` 建立索引。
+- `user_id` 使用 `ON DELETE SET NULL`；`parent_id` 和 `root_id` 使用级联删除。
+- `parent_id` 必须指向同一文章下的评论。
+- 公开接口只返回公开评论字段和 `replyCount`，不返回邮箱与用户 ID。
+- 使用与访客留言、项目评论相同的 keyset 分页和线程懒加载规则。
+
 ## 8. 旧表迁移逻辑
 
 首次导入 `server/db.js` 时，如果存在旧版 `comments` 表，会在同一个事务中执行：
@@ -423,6 +477,8 @@ project_comments
 | PUT | `/api/profile/password` | 修改密码 | 是 |
 | GET | `/api/strengths` | 获取个人优势列表 | 否 |
 | GET | `/api/content/site` | 获取 Hero、身份联系信息和经历内容 | 否 |
+| GET | `/api/articles` | 获取已发布博客文章列表 | 否 |
+| GET | `/api/articles/:articleId` | 获取已发布博客文章详情 | 否 |
 | GET | `/api/health` | 检查 API 与 SQLite 数据库状态 | 否 |
 | GET | `/api/guestbook-comments` | 获取访客留言顶层评论（keyset 分页：`limit`/`cursor`） | 否 |
 | GET | `/api/guestbook-comments/:rootId/replies` | 获取某条顶层留言下的全部回复 | 否 |
@@ -432,6 +488,9 @@ project_comments
 | GET | `/api/projects/:projectId/comments` | 获取项目顶层评论（keyset 分页：`limit`/`cursor`） | 否 |
 | GET | `/api/projects/:projectId/comments/:rootId/replies` | 获取某条顶层项目评论下的全部回复 | 否 |
 | POST | `/api/projects/:projectId/comments` | 提交项目评论或任意层级回复 | 是 |
+| GET | `/api/articles/:articleId/comments` | 获取文章顶层评论（keyset 分页） | 否 |
+| GET | `/api/articles/:articleId/comments/:rootId/replies` | 获取文章评论线程回复 | 否 |
+| POST | `/api/articles/:articleId/comments` | 提交文章评论或任意层级回复 | 是 |
 | GET | `/api/admin/comments` | 获取访客留言和项目评论管理列表 | 管理员 |
 | DELETE | `/api/admin/guestbook-comments/:id` | 删除访客留言及其回复 | 管理员 |
 | DELETE | `/api/admin/project-comments/:id` | 删除项目评论及其回复 | 管理员 |
@@ -445,6 +504,12 @@ project_comments
 | POST | `/api/admin/strengths` | 新增优势 | 管理员 |
 | PUT | `/api/admin/strengths/:id` | 修改优势 | 管理员 |
 | DELETE | `/api/admin/strengths/:id` | 删除优势 | 管理员 |
+| GET | `/api/admin/articles` | 获取文章管理列表（含草稿） | 管理员 |
+| POST | `/api/admin/articles` | 新增文章 | 管理员 |
+| PUT | `/api/admin/articles/:id` | 修改文章 | 管理员 |
+| DELETE | `/api/admin/articles/:id` | 删除文章及其评论 | 管理员 |
+| GET | `/api/admin/article-comments` | 获取文章评论管理列表 | 管理员 |
+| DELETE | `/api/admin/article-comments/:id` | 删除文章评论及其回复 | 管理员 |
 | GET | `/api/admin/content/site` | 获取站点内容管理数据 | 管理员 |
 | PUT | `/api/admin/content/site` | 修改 Hero、身份联系信息和经历内容 | 管理员 |
 | GET | `/api/admin/users` | 获取用户列表 | 管理员 |
