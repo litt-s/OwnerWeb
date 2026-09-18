@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Editor, Toolbar } from '@wangeditor/editor-for-react';
 import '@wangeditor/editor/dist/css/style.css';
+import hljs from 'highlight.js/lib/common';
 import {
   fetchAdminArticles,
   createArticle,
@@ -35,16 +36,23 @@ function toDraft(article) {
 
 export default function AdminArticles({ token }) {
   const editorRef = useRef(null);
+  const previewRef = useRef(null);
   const [editor, setEditor] = useState(null);
   const [articles, setArticles] = useState([]);
   const [draft, setDraft] = useState(null);
   const [confirmId, setConfirmId] = useState(null);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
+  const [preview, setPreview] = useState(false);
 
   const load = () => fetchAdminArticles(token).then(setArticles).catch((error) => setErr(error.message));
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (!preview || !previewRef.current) return;
+    previewRef.current.querySelectorAll('pre code').forEach((block) => hljs.highlightElement(block));
+  }, [preview, draft?.content]);
 
   const openNew = () => {
     const nextOrder = articles.reduce((max, item) => Math.max(max, item.sort_order || 0), 0) + 1;
@@ -189,17 +197,27 @@ export default function AdminArticles({ token }) {
               }} />
             </div>
             <div className="editor-block article-writing-editor">
-              <h4>正文编辑 · wangEditor</h4>
-              <div className="article-rich-editor">
-                <Toolbar editor={editor} defaultConfig={toolbarConfig} mode="default" />
-                <Editor
-                  value={draft.content}
-                  defaultConfig={editorConfig}
-                  onCreated={(instance) => { editorRef.current = instance; setEditor(instance); }}
-                  onChange={(editor) => setDraft((current) => ({ ...current, content: editor.getHtml() }))}
-                  mode="default"
-                />
+              <div className="article-writing-head">
+                <h4>正文编辑 · wangEditor</h4>
+                <div className="article-mode-tabs">
+                  <button type="button" className={!preview ? 'on' : ''} onClick={() => setPreview(false)}>编辑</button>
+                  <button type="button" className={preview ? 'on' : ''} onClick={() => setPreview(true)}>预览</button>
+                </div>
               </div>
+              {preview ? (
+                <div ref={previewRef} className="article-preview" dangerouslySetInnerHTML={{ __html: draft.content }} />
+              ) : (
+                <div className="article-rich-editor">
+                  <Toolbar editor={editor} defaultConfig={toolbarConfig} mode="default" />
+                  <Editor
+                    value={draft.content}
+                    defaultConfig={editorConfig}
+                    onCreated={(instance) => { editorRef.current = instance; setEditor(instance); }}
+                    onChange={(instance) => setDraft((current) => ({ ...current, content: instance.getHtml() }))}
+                    mode="default"
+                  />
+                </div>
+              )}
               <p className="editor-note">支持 H1-H5、字号、图片、列表、引用和代码块；正文图片会上传到 Cloudflare KV。</p>
             </div>
           </div>

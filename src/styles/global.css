@@ -1644,6 +1644,18 @@ a.channel:hover .channel-value::after {
   border: 1px solid var(--line);
   border-radius: 10px;
 }
+.article-content pre {
+  margin: 22px 0;
+  padding: 20px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #1e1e1e;
+  color: #f5f5f5;
+  font-family: var(--mono);
+  line-height: 1.65;
+}
+.article-content code { font-family: var(--mono); }
 .article-comments-placeholder {
   padding: 24px 0;
   border-top: 1px solid var(--line);
@@ -2090,10 +2102,78 @@ a.channel:hover .channel-value::after {
   background: var(--bg-soft) !important;
 }
 .article-rich-editor .w-e-text {
-  color: var(--text) !important;
+  color: #111111 !important;
   font-size: 16px;
   line-height: 1.8;
 }
+.article-rich-editor .w-e-text-container {
+  background: #ffffff !important;
+}
+.article-rich-editor .w-e-text p,
+.article-rich-editor .w-e-text h1,
+.article-rich-editor .w-e-text h2,
+.article-rich-editor .w-e-text h3,
+.article-rich-editor .w-e-text h4,
+.article-rich-editor .w-e-text h5,
+.article-rich-editor .w-e-text li {
+  color: #111111 !important;
+}
+.article-writing-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.article-mode-tabs {
+  display: flex;
+  gap: 6px;
+}
+.article-mode-tabs button {
+  padding: 6px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.article-mode-tabs button.on,
+.article-mode-tabs button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.article-preview {
+  min-height: 520px;
+  padding: 24px 28px;
+  overflow: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #111111;
+  line-height: 1.8;
+}
+.article-preview h1,
+.article-preview h2,
+.article-preview h3,
+.article-preview h4,
+.article-preview h5 {
+  margin: 22px 0 10px;
+  line-height: 1.3;
+}
+.article-preview p { margin: 10px 0; }
+.article-preview img { max-width: 100%; height: auto; }
+.article-preview pre {
+  margin: 16px 0;
+  padding: 18px;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: #1e1e1e;
+  color: #f5f5f5;
+  font-family: var(--mono);
+  line-height: 1.6;
+}
+.article-preview code { font-family: var(--mono); }
 .admin-toolbar {
   display: flex;
   align-items: center;

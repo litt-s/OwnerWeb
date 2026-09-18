@@ -10,7 +10,7 @@
 样式：普通 CSS
 视觉增强：Three.js + @react-three/fiber + OGL
 请求封装：src/api.js（支持 VITE_API_BASE）
-富文本编辑：wangEditor（受控 HTML）
+富文本编辑：wangEditor（受控 HTML）+ highlight.js（代码高亮）
 业务接口：src/services/
 ```
 
