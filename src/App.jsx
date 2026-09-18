@@ -15,6 +15,7 @@ import AdminPage from './pages/AdminPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
 import BlogPage from './pages/BlogPage';
 import ArticleDetailPage from './pages/ArticleDetailPage';
+import Footer from './components/Footer';
 import ThinkingDots from './components/ThinkingDots';
 
 function SiteAtmosphere() {
@@ -51,6 +52,7 @@ function Home() {
       <Experience />
       <Projects />
       <Strengths />
+      <Footer />
     </>
   );
 }
